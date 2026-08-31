@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Cuestionario previo para definir la web del estudio.">
+<title>Antes de dibujar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root{
+  --ground:#E4E7EA;
+  --sheet:#FFFFFF;
+  --ink:#14181C;
+  --ink-soft:#5C666F;
+  --ink-faint:#909AA3;
+  --line:#D5DADF;
+  --line-soft:#E9ECEF;
+  --accent:#23568A;
+  --accent-on:#FFFFFF;
+  --accent-wash:#E9EFF6;
+  --marca:#A9433A;
+  --ok:#3D7A5C;
+  --shadow:0 1px 2px rgba(20,24,28,.05), 0 8px 24px -12px rgba(20,24,28,.18);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0E1114;
+    --sheet:#171B20;
+    --ink:#E3E7EB;
+    --ink-soft:#98A2AB;
+    --ink-faint:#6C767F;
+    --line:#2B323A;
+    --line-soft:#21272D;
+    --accent:#84B4E8;
+    --accent-on:#0E1114;
+    --accent-wash:#1A2937;
+    --marca:#DC8F85;
+    --ok:#7FBFA0;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0E1114;
+  --sheet:#171B20;
+  --ink:#E3E7EB;
+  --ink-soft:#98A2AB;
+  --ink-faint:#6C767F;
+  --line:#2B323A;
+  --line-soft:#21272D;
+  --accent:#84B4E8;
+  --accent-on:#0E1114;
+  --accent-wash:#1A2937;
+  --marca:#DC8F85;
+  --ok:#7FBFA0;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--ink);
+  font-family:"Archivo","Helvetica Neue",Arial,sans-serif;
+  font-size:16px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+
+/* ---------- barra superior ---------- */
+.barra{
+  position:sticky; top:0; z-index:20;
+  background:var(--ground);
+  border-bottom:1px solid var(--line);
+}
+.barra-in{
+  max-width:820px; margin:0 auto; padding:10px 20px 0;
+  display:flex; flex-direction:column; gap:8px;
+}
+.barra-fila{display:flex; align-items:baseline; justify-content:space-between; gap:12px}
+.marca-nombre{
+  font-size:13px; font-weight:600; letter-spacing:.14em; text-transform:uppercase;
+  margin:0;
+}
+.contador{
+  font-size:11px; letter-spacing:.08em; color:var(--ink-soft);
+  font-variant-numeric:tabular-nums; white-space:nowrap;
+}
+.guardado{color:var(--ok); opacity:0; transition:opacity .25s}
+.guardado.ver{opacity:1}
+
+/* escala grafica, como la de un plano */
+.escala{position:relative; height:14px; margin-bottom:2px}
+.escala-riel{
+  position:absolute; left:0; right:0; top:6px; height:3px;
+  background:var(--line);
+}
+.escala-lleno{
+  position:absolute; left:0; top:6px; height:3px;
+  background:var(--accent); transition:width .35s ease;
+}
+.escala-ticks{position:absolute; left:0; right:0; top:0; height:14px; display:flex}
+.escala-ticks span{
+  flex:1; border-left:1px solid var(--line-soft); height:14px;
+}
+.escala-ticks span:first-child{border-left:0}
+
+/* ---------- navegacion de bloques ---------- */
+.chips{
+  display:flex; gap:6px; overflow-x:auto; padding:8px 0 10px;
+  scrollbar-width:thin;
+}
+.chip{
+  flex:0 0 auto;
+  font-family:"IBM Plex Mono",monospace; font-size:11px;
+  padding:5px 9px; border-radius:2px;
+  border:1px solid var(--line); background:transparent; color:var(--ink-soft);
+  cursor:pointer; display:flex; align-items:center; gap:6px;
+}
+.chip:hover{border-color:var(--accent); color:var(--ink)}
+.chip[aria-current="true"]{background:var(--ink); color:var(--ground); border-color:var(--ink)}
+.punto{width:5px; height:5px; border-radius:50%; background:var(--line); flex:0 0 auto}
+.chip[aria-current="true"] .punto{background:var(--ground); opacity:.45}
+.punto.parcial{background:var(--accent); opacity:.5}
+.punto.lleno{background:var(--accent); opacity:1}
+.chip[aria-current="true"] .punto.lleno{background:var(--ground); opacity:1}
+
+/* ---------- hoja ---------- */
+main{max-width:820px; margin:0 auto; padding:24px 20px 96px}
+.hoja{
+  background:var(--sheet);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow);
+  padding:36px 32px 32px;
+}
+.rotulo{
+  display:flex; align-items:flex-start; gap:16px;
+  padding-bottom:20px; margin-bottom:8px;
+  border-bottom:1px solid var(--line);
+}
+.rotulo-n{
+  font-family:"IBM Plex Mono",monospace; font-size:30px; line-height:1;
+  color:var(--accent); font-variant-numeric:tabular-nums;
+}
+.rotulo-t{margin:0; font-size:24px; font-weight:600; letter-spacing:-.015em; text-wrap:balance}
+.rotulo-d{margin:5px 0 0; color:var(--ink-soft); font-size:14.5px; max-width:56ch}
+
+.preguntas{display:flex; flex-direction:column; gap:0}
+.pregunta{padding:24px 0; border-bottom:1px solid var(--line-soft)}
+.pregunta:last-child{border-bottom:0; padding-bottom:4px}
+.p-cab{display:flex; gap:12px; align-items:baseline}
+.p-num{
+  font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-faint);
+  font-variant-numeric:tabular-nums; flex:0 0 24px; padding-top:3px;
+}
+.p-txt{font-size:18px; font-weight:500; line-height:1.35; letter-spacing:-.01em; text-wrap:balance; margin:0}
+.p-clave{
+  font-family:"IBM Plex Mono",monospace; font-size:9.5px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--marca); white-space:nowrap; padding-top:5px;
+}
+.p-ayuda{margin:6px 0 0 36px; font-size:14px; color:var(--ink-soft); max-width:58ch}
+.p-campo{margin:14px 0 0 36px; max-width:60ch}
+
+input[type=text], textarea{
+  width:100%; font:inherit; font-size:16px; color:var(--ink);
+  background:transparent;
+  border:0; border-bottom:1.5px solid var(--line);
+  padding:7px 2px; border-radius:0;
+  transition:border-color .15s;
+  resize:none; overflow:hidden;
+}
+input[type=text]:hover, textarea:hover{border-bottom-color:var(--ink-faint)}
+input[type=text]:focus, textarea:focus{outline:none; border-bottom-color:var(--accent)}
+input[type=text]::placeholder, textarea::placeholder{color:var(--ink-faint)}
+
+.ops{display:flex; flex-direction:column; gap:1px}
+.op{
+  display:flex; align-items:flex-start; gap:10px;
+  padding:9px 10px; cursor:pointer; border:1px solid transparent;
+  font-size:15.5px; line-height:1.4;
+}
+.op:hover{background:var(--accent-wash); border-color:var(--accent-wash)}
+.op input{position:absolute; opacity:0; width:0; height:0}
+.caja{
+  flex:0 0 auto; width:15px; height:15px; margin-top:3px;
+  border:1.5px solid var(--ink-faint); background:transparent;
+  display:flex; align-items:center; justify-content:center;
+}
+.op.radio .caja{border-radius:50%}
+.op input:focus-visible + .caja{outline:2px solid var(--accent); outline-offset:2px}
+.op input:checked + .caja{border-color:var(--accent); background:var(--accent)}
+.op input:checked + .caja::after{
+  content:""; width:5px; height:5px; background:var(--accent-on);
+}
+.op.radio input:checked + .caja::after{border-radius:50%}
+.op input:checked ~ .op-t{color:var(--ink); font-weight:500}
+.op-t{color:var(--ink-soft)}
+
+.escala5{display:flex; gap:6px; flex-wrap:wrap; align-items:center}
+.n5{
+  font-family:"IBM Plex Mono",monospace; font-size:15px;
+  width:42px; height:42px; border:1px solid var(--line); background:transparent;
+  color:var(--ink-soft); cursor:pointer;
+}
+.n5:hover{border-color:var(--accent); color:var(--ink)}
+.n5[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:var(--accent-on)}
+.n5-leyenda{font-size:12.5px; color:var(--ink-faint); margin-left:4px}
+
+.nota{margin-top:10px}
+.nota label{
+  display:block; font-family:"IBM Plex Mono",monospace; font-size:10.5px;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:2px;
+}
+
+/* ---------- navegacion inferior ---------- */
+.pies{display:flex; justify-content:space-between; gap:12px; margin-top:24px; align-items:center}
+button.nav{
+  font:inherit; font-size:14.5px; font-weight:500;
+  padding:11px 20px; cursor:pointer; border:1px solid var(--line);
+  background:var(--sheet); color:var(--ink);
+}
+button.nav:hover{border-color:var(--ink-faint)}
+button.nav.primario{background:var(--ink); color:var(--ground); border-color:var(--ink)}
+button.nav.primario:hover{opacity:.87}
+button.nav[disabled]{opacity:.35; cursor:default}
+button:focus-visible, .chip:focus-visible, a:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+/* ---------- intro y resumen ---------- */
+.intro-h{font-size:38px; font-weight:700; letter-spacing:-.03em; margin:0 0 4px; line-height:1.05; text-wrap:balance}
+.intro-sub{font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); margin:0 0 22px}
+.intro p{max-width:62ch; color:var(--ink-soft); font-size:16px}
+.intro p strong{color:var(--ink); font-weight:600}
+.reglas{list-style:none; padding:0; margin:22px 0; display:flex; flex-direction:column; gap:0; border-top:1px solid var(--line-soft)}
+.reglas li{display:flex; gap:14px; padding:13px 0; border-bottom:1px solid var(--line-soft); font-size:15px}
+.reglas b{
+  font-family:"IBM Plex Mono",monospace; font-weight:400; font-size:12px;
+  color:var(--accent); flex:0 0 22px; padding-top:3px;
+}
+.reglas span{color:var(--ink-soft)}
+.reglas span em{color:var(--ink); font-style:normal; font-weight:500}
+
+.res-caja{border:1px solid var(--line); padding:18px; margin:20px 0; background:var(--accent-wash)}
+.res-caja p{margin:0 0 12px; font-size:15px; color:var(--ink-soft)}
+.res-caja p:last-child{margin-bottom:0}
+.acciones{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+.faltan{margin:18px 0 0}
+.faltan h3{font-size:13px; font-family:"IBM Plex Mono",monospace; font-weight:500; letter-spacing:.1em; text-transform:uppercase; color:var(--marca); margin:0 0 8px}
+.faltan ul{margin:0; padding-left:18px; color:var(--ink-soft); font-size:14.5px}
+.faltan li{margin-bottom:4px; cursor:pointer}
+.faltan li:hover{color:var(--accent); text-decoration:underline}
+details{margin-top:22px; border-top:1px solid var(--line-soft); padding-top:14px}
+summary{cursor:pointer; font-size:14px; color:var(--ink-soft)}
+summary:hover{color:var(--ink)}
+#volcado{
+  width:100%; margin-top:12px; min-height:220px; font-family:"IBM Plex Mono",monospace;
+  font-size:12.5px; line-height:1.6; border:1px solid var(--line); padding:12px;
+  overflow:auto; resize:vertical; white-space:pre-wrap;
+}
+.pie-legal{
+  max-width:820px; margin:0 auto; padding:0 20px 40px;
+  font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-faint);
+  display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;
+}
+.borrar{background:none; border:0; color:var(--ink-faint); font:inherit; cursor:pointer; padding:0; text-decoration:underline}
+.borrar:hover{color:var(--marca)}
+
+@media (max-width:640px){
+  .hoja{padding:26px 18px 24px}
+  main{padding:16px 12px 80px}
+  .rotulo-n{font-size:24px}
+  .rotulo-t{font-size:20px}
+  .p-txt{font-size:17px}
+  .p-cab{flex-wrap:wrap}
+  .p-ayuda,.p-campo{margin-left:0}
+  .intro-h{font-size:29px}
+  .pies{flex-direction:column-reverse; align-items:stretch}
+  button.nav{width:100%}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none !important; animation:none !important}
+}
+</style>
+
+</head>
+<body>
+<div class="barra">
+  <div class="barra-in">
+    <div class="barra-fila">
+      <p class="marca-nombre">Brief · Web del estudio</p>
+      <p class="contador mono"><span id="cont">0 / 67</span> <span class="guardado" id="guardado">· guardado</span></p>
+    </div>
+    <div class="escala" aria-hidden="true">
+      <div class="escala-riel"></div>
+      <div class="escala-lleno" id="escalaLleno" style="width:0%"></div>
+      <div class="escala-ticks" id="ticks"></div>
+    </div>
+    <nav class="chips" id="chips" aria-label="Bloques del cuestionario"></nav>
+  </div>
+</div>
+
+<main>
+  <section class="hoja" id="hoja" tabindex="-1"></section>
+  <div class="pies">
+    <button class="nav" id="btnPrev" type="button">← Anterior</button>
+    <button class="nav primario" id="btnNext" type="button">Siguiente →</button>
+  </div>
+</main>
+
+<div class="pie-legal">
+  <span>Tus respuestas se guardan solas en este navegador.</span>
+  <button class="borrar" id="btnBorrar" type="button">Borrar todo y empezar de nuevo</button>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var BLOQUES = [
+{n:"01", t:"Datos básicos", d:"Lo mínimo para saber de quién es esta web y para cuándo la necesitás.", p:[
+  {t:"¿Cómo se llama el estudio, o cómo querés firmar la web?", h:"Tal cual querés que se lea arriba de todo.", tipo:"linea", clave:true},
+  {t:"¿Mostrás matrícula, título y colegio profesional?", tipo:"una", ops:["Sí, quiero que se vea","No hace falta","No sé, decime vos"]},
+  {t:"¿En qué ciudad y zona trabajás?", h:"Y si tomás trabajos fuera de ahí, aclaralo.", tipo:"linea", clave:true},
+  {t:"Datos de contacto que querés públicos", h:"Mail, teléfono, WhatsApp, dirección del estudio. Lo que NO quieras publicar, no lo pongas.", tipo:"texto", clave:true},
+  {t:"¿En qué redes estás?", h:"Pegá los links. Y decime cuál usás en serio y cuál está abandonada hace dos años.", tipo:"texto"},
+  {t:"¿Ya tenés dominio comprado?", h:"Si no, tirá el nombre que te gustaría. Por ejemplo: estudiofulano.com.ar", tipo:"linea"},
+  {t:"¿Tenés alguna web o landing dando vueltas?", h:"Pasá el link aunque no te guste. Sobre todo si no te gusta.", tipo:"linea"},
+  {t:"¿Para cuándo la necesitás?", h:"¿Hay una fecha atada a algo? Un concurso, una apertura, una feria, una nota que te van a publicar.", tipo:"linea", clave:true}
+]},
+{n:"02", t:"El objetivo", d:"Para qué existe esta web. Si esto queda claro, el resto de las decisiones se toman solas.", p:[
+  {t:"Si esta web funcionara perfecto, ¿qué pasaría?", h:"Contestá con lo que querrías que pase de verdad: que te lleguen más consultas, que te tomen más en serio, que te encuentre un tipo de cliente puntual.", tipo:"texto", clave:true},
+  {t:"¿Cómo te llegan los clientes hoy?", h:"Recomendación, Instagram, concursos, la inmobiliaria del barrio. Sé honesto, esto no lo publica nadie.", tipo:"texto", clave:true},
+  {t:"Si alguien entra y hace UNA sola cosa antes de irse, ¿cuál querés que sea?", tipo:"una", clave:true, nota:true, ops:["Escribirte por el formulario","Mandarte un WhatsApp","Llamarte por teléfono","Ver tus obras y acordarse de vos","Seguirte en Instagram"]},
+  {t:"Dentro de un año, ¿cómo te darías cuenta de que la web sirvió?", tipo:"texto"},
+  {t:"¿Qué tipo de trabajo querés atraer más? ¿Y cuál querés dejar de recibir?", h:"La segunda parte importa tanto como la primera. Una web también sirve para espantar consultas que no te interesan.", tipo:"texto", clave:true}
+]},
+{n:"03", t:"A quién le hablás", d:"Todo lo que vamos a escribir y mostrar depende de quién está del otro lado.", p:[
+  {t:"¿Quién entra a esta web?", h:"Marcá todos los que apliquen.", tipo:"varias", clave:true, ops:["Particulares que quieren hacer su casa","Gente que quiere reformar o ampliar","Desarrolladores e inversores","Comercios y locales","Municipios u organismos públicos","Otros estudios o colegas","Estudiantes o gente buscando trabajo"]},
+  {t:"Describime a tu cliente ideal como si me contaras de una persona real.", h:"Edad aproximada, a qué se dedica, cuánta plata maneja, qué le importa, qué lo pone nervioso.", tipo:"texto", clave:true},
+  {t:"¿Qué duda o qué miedo tiene esa persona antes de contratar a un arquitecto?", h:"Si sabemos esto, la web puede contestarlo antes de que lo pregunte.", tipo:"texto", clave:true},
+  {t:"¿Qué necesita ver para confiar en vos?", tipo:"varias", ops:["Obras terminadas y bien fotografiadas","Que le expliques cómo es el proceso","Una idea de los plazos","Una idea de los costos","Testimonios de otros clientes","Tu cara y tu historia","Premios y publicaciones"]},
+  {t:"¿Contra quién competís realmente?", h:"¿Estudios más grandes? ¿Colegas de la zona? ¿O contra la idea de hacer la obra sin arquitecto?", tipo:"texto"}
+]},
+{n:"04", t:"Identidad y tono", d:"Cómo se ve y cómo suena. Acá salen las decisiones de tipografía, color y voz.", p:[
+  {t:"En una frase: qué hacés y para quién.", h:"Esta frase probablemente termine siendo lo primero que se lee en la web.", tipo:"linea", clave:true},
+  {t:"¿Qué te diferencia de otro arquitecto de tu zona?", h:"Concreto, por favor. \"Calidad y compromiso\" no cuenta: eso lo dice absolutamente todo el mundo.", tipo:"texto", clave:true},
+  {t:"Cinco palabras que querés que alguien sienta al entrar. Y tres que NO.", h:"Por ejemplo: sobrio, cálido, preciso, honesto, contemporáneo. Y NO: frío, pretencioso, barato.", tipo:"texto", clave:true},
+  {t:"¿Tenés logo?", tipo:"una", clave:true, nota:true, ops:["Sí, y tengo el archivo original (vector, AI, SVG)","Sí, pero solo tengo un JPG o un PNG","Tengo algo, pero no me convence","No tengo, hay que hacerlo"]},
+  {t:"¿Tenés colores o tipografías ya definidas?", h:"Tarjetas, carátulas de plano, membrete, presentaciones. Si tenés algo hecho, mandámelo.", tipo:"texto"},
+  {t:"¿Hablás en singular o en plural?", h:"Hay que elegir uno y sostenerlo en toda la web.", tipo:"una", nota:true, ops:["Singular: \"diseño\", \"trabajo así\"","Plural: \"diseñamos\", \"en el estudio\""]}
+]},
+{n:"05", t:"Las obras", d:"El corazón del sitio. Este bloque es el más largo y el más importante: define cómo se arma todo el portfolio.", p:[
+  {t:"¿Cuántas obras querés publicar al lanzar? ¿Y cuántas tenés en total?", h:"Es mejor cinco obras bien mostradas que veinte a medias.", tipo:"linea", clave:true},
+  {t:"Listame las cinco obras que más te representan.", h:"Con el nombre que uses vos. Si son menos de cinco, no pasa nada.", tipo:"texto", clave:true},
+  {t:"¿Cómo querés agruparlas?", tipo:"una", clave:true, nota:true, ops:["Por tipo (vivienda, comercial, interiorismo…)","Por año, de la más nueva a la más vieja","Por escala","Todas juntas, sin categorías"]},
+  {t:"Por cada obra, ¿qué datos van en la ficha?", tipo:"varias", clave:true, ops:["Ubicación","Año","Superficie","Comitente o cliente","Equipo y colaboradores","Fotógrafo","Estado: construida / proyecto / concurso","Empresa constructora"]},
+  {t:"Además de fotos, ¿qué más mostrás?", h:"Ojo: esto cambia bastante cómo hay que armar cada página de obra.", tipo:"varias", ops:["Plantas","Cortes y vistas","Axonometrías","Renders","Maquetas","Croquis a mano","Detalles constructivos"]},
+  {t:"¿Mostrás proyectos no construidos y concursos que no ganaste?", tipo:"una", ops:["Sí, me interesa mostrarlos","Solo algunos","No, solo obra construida"]},
+  {t:"¿Hay obras con confidencialidad, o clientes que no quieren aparecer?", h:"Mejor saberlo ahora que después de publicarlas.", tipo:"texto"},
+  {t:"Las fotos de tus obras, ¿de dónde salen?", h:"Los derechos de las fotos son de quien las sacó, no de quien hizo la obra. Conviene tenerlo resuelto antes.", tipo:"una", clave:true, nota:true, ops:["Fotógrafo profesional, tengo permiso para usarlas","Fotógrafo profesional, habría que pedirle permiso","Las saqué yo","Una mezcla de las dos cosas"]},
+  {t:"¿Cuántas fotos por obra tenés, más o menos? ¿Y dónde están hoy?", h:"Drive, un disco externo, el celular, un pendrive en un cajón. Importa para calcular cuánto trabajo de recopilación hay por delante.", tipo:"texto", clave:true},
+  {t:"¿Querés un texto que acompañe cada obra?", tipo:"una", clave:true, ops:["Sí, y los escribo yo","Sí, pero necesito ayuda para escribirlos","Con la ficha de datos alcanza"]},
+  {t:"¿Querés mostrar el proceso de obra?", tipo:"una", ops:["Sí, antes y después","Sí, avance de obra","No, solo el resultado final"]}
+]},
+{n:"06", t:"Secciones y contenido", d:"Qué más hay además de las obras, y cuánto material de eso ya existe escrito.", p:[
+  {t:"Además de las obras, ¿qué secciones querés?", tipo:"varias", clave:true, ops:["Sobre mí / El estudio","Servicios","Cómo trabajo (el proceso)","Contacto","Novedades o blog","Prensa y publicaciones","Premios","Equipo"]},
+  {t:"¿Qué servicios ofrecés y querés listar?", h:"Anteproyecto, proyecto ejecutivo, dirección de obra, reformas, regularizaciones, interiorismo, tasaciones, lo que sea.", tipo:"texto", clave:true},
+  {t:"¿Querés explicar paso a paso cómo trabajás?", h:"Sirve muchísimo con clientes primerizos, que no tienen idea de qué van a recibir ni cuándo.", tipo:"una", ops:["Sí, con etapas y qué incluye cada una","Sí, pero contado corto","No hace falta"]},
+  {t:"¿Hablás de plata en la web?", tipo:"una", nota:true, ops:["No, que consulten","Sí, rangos orientativos","Sí, explico cómo cobro los honorarios"]},
+  {t:"¿Tenés bio escrita y una foto tuya?", tipo:"una", clave:true, ops:["Tengo las dos cosas","Tengo bio, falta foto","Tengo foto, falta bio","No tengo nada","Prefiero no mostrar mi cara"]},
+  {t:"¿Premios, publicaciones, notas, docencia, jurados?", h:"Todo lo que sirva como respaldo, aunque te parezca poco.", tipo:"texto"},
+  {t:"¿Podés conseguir tres testimonios de clientes?", tipo:"una", ops:["Sí, sin problema","Puedo intentar","Prefiero no pedirlo"]},
+  {t:"¿Vas a publicar novedades seguido?", h:"Contestá con la verdad, no con la intención. Un blog con la última entrada de hace tres años hace más daño que no tener blog.", tipo:"una", clave:true, ops:["Sí, me veo escribiendo seguido","Cada tanto","No, el sitio va a quedar quieto"]},
+  {t:"¿Hace falta otro idioma?", tipo:"una", nota:true, ops:["No, solo español","Español e inglés","Otro"]}
+]},
+{n:"07", t:"Referencias visuales", d:"El bloque donde más se define cómo va a verse. Tomate el tiempo de abrir las webs y mirarlas de nuevo.", p:[
+  {t:"Pasame 3 a 5 webs de arquitectos que te gusten.", h:"Y por cada una decime QUÉ te gusta: las fotos, cómo se mueve, la tipografía, lo vacía que está. \"Me gusta todo\" no me sirve para nada.", tipo:"texto", clave:true},
+  {t:"Pasame una o dos que NO te gusten, y por qué.", h:"Esto suele ser más útil que las que te gustan.", tipo:"texto", clave:true},
+  {t:"¿Cómo te imaginás la portada?", tipo:"una", clave:true, nota:true, ops:["Una foto enorme a pantalla completa","Una grilla de obras, tipo catálogo","Poco texto y mucho aire","Algo con más información arriba de todo"]},
+  {t:"¿Claro u oscuro?", tipo:"una", clave:true, ops:["Claro y luminoso, mucho blanco","Oscuro, las fotos resaltan más","No sé, mostrame las dos"]},
+  {t:"¿Cuánto movimiento?", tipo:"una", ops:["Sobrio y rápido, sin animaciones","Algunas transiciones suaves","Me gusta que se mueva y sorprenda"]},
+  {t:"¿Alguna web fuera de la arquitectura que te parezca buenísima?", h:"Moda, museos, diarios, restaurantes. De ahí suele salir la mejor idea.", tipo:"texto"}
+]},
+{n:"08", t:"Funcionalidades", d:"Qué tiene que poder hacer la gente, más allá de mirar.", p:[
+  {t:"¿Formulario de contacto? ¿Qué le pedimos y a qué mail llega?", h:"Cuanto menos datos le pidas, más gente escribe.", tipo:"texto", clave:true},
+  {t:"¿Botón directo a WhatsApp?", tipo:"una", clave:true, ops:["Sí, y que esté siempre visible","Sí, pero discreto, solo en Contacto","No, prefiero que me escriban por mail"]},
+  {t:"¿Querés que la gente pueda adjuntar archivos al escribirte?", h:"Un plano, la escritura, una foto del terreno.", tipo:"una", ops:["Sí, me ahorraría idas y vueltas","No, prefiero que primero hablemos"]},
+  {t:"¿Algo de esto te interesa?", tipo:"varias", ops:["Newsletter","Un PDF de portfolio para descargar","Nada de esto"]},
+  {t:"¿Mapa con la ubicación del estudio?", tipo:"una", ops:["Sí, recibo gente ahí","No, trabajo desde casa o voy yo","Prefiero no publicar la dirección"]},
+  {t:"¿Viste algo en alguna web y pensaste \"esto quiero\"?", h:"Contame qué era, aunque no te acuerdes dónde lo viste.", tipo:"texto"}
+]},
+{n:"09", t:"Cargar contenido vos mismo", d:"Vos querés poder subir obras nuevas sin depender de nadie. Estas respuestas definen qué tan complejo es el sistema por detrás.", p:[
+  {t:"¿Cada cuánto vas a subir una obra nueva?", tipo:"una", clave:true, ops:["Una por mes o más","Cada dos o tres meses","Un par de veces al año","Casi nunca, cuando termino algo grande"]},
+  {t:"Del 1 al 5, ¿qué tan cómodo estás editando cosas en internet?", h:"1 = me da pánico tocar algo. 5 = si me dejás, me armo la web solo.", tipo:"escala", clave:true},
+  {t:"¿Usaste alguna de estas herramientas?", tipo:"varias", ops:["Wix","Squarespace","WordPress","Canva","Notion","Ninguna"]},
+  {t:"¿Preferís cargar el contenido vos o pasármelo a mí?", tipo:"una", clave:true, ops:["Lo cargo yo, aunque tenga que aprender","Lo cargo yo si es muy fácil; si no, te lo paso","Te lo paso a vos y listo"]},
+  {t:"¿Desde dónde lo vas a cargar?", tipo:"una", ops:["Desde la computadora","Desde el celular","Las dos cosas"]},
+  {t:"¿Alguien más del estudio va a necesitar editar?", tipo:"una", nota:true, ops:["No, solo yo","Sí, un socio o socia","Sí, alguien que me ayuda con las redes"]}
+]},
+{n:"10", t:"Logística", d:"La parte aburrida, que es exactamente donde se frenan los proyectos.", p:[
+  {t:"¿Quién junta y ordena el material? ¿Para cuándo lo tenés?", h:"Fotos, textos, planos. Esta es, de lejos, la etapa que más demora todo.", tipo:"texto", clave:true},
+  {t:"¿Quién se hace cargo del dominio y el hosting?", h:"Son costos chicos pero anuales, y alguien los tiene que pagar y renovar todos los años.", tipo:"una", clave:true, ops:["Yo, decime cuánto es","Prefiero que lo manejes vos y te lo pago","Hablémoslo"]},
+  {t:"¿Cuánta disponibilidad tenés para mirar avances y contestar dudas?", tipo:"una", clave:true, ops:["Contesto en el día","Un par de veces por semana","Estoy a full, voy a tardar"]},
+  {t:"¿Alguien más tiene que dar el visto bueno?", tipo:"una", nota:true, ops:["No, decido yo","Sí, un socio o socia","Sí, mi pareja o mi familia"]},
+  {t:"¿Algo importante que no te pregunté?", h:"Manías, cosas que odiás, algo que te dijeron y te quedó dando vueltas.", tipo:"texto"}
+]}
+];
+
+/* --- numeracion global --- */
+var TOTAL = 0;
+BLOQUES.forEach(function(b, bi){
+  b.i = bi;
+  b.p.forEach(function(q){
+    TOTAL++;
+    q.num = TOTAL;
+    q.id = "q" + TOTAL;
+    q.bloque = bi;
+  });
+});
+var TODAS = BLOQUES.reduce(function(a,b){ return a.concat(b.p); }, []);
+var CLAVE_TOTAL = TODAS.filter(function(q){ return q.clave; }).length;
+
+/* --- estado --- */
+var LLAVE = "brief-arquitecto-v1";
+var R = {};
+var paso = 0;               // 0 = intro, 1..10 = bloques, 11 = resumen
+var PASOS = BLOQUES.length + 2;
+
+function cargar(){
+  try{
+    var crudo = localStorage.getItem(LLAVE);
+    if(!crudo) return;
+    var d = JSON.parse(crudo);
+    if(d && typeof d === "object"){
+      R = (d.r && typeof d.r === "object") ? d.r : {};
+      if(typeof d.paso === "number" && d.paso >= 0 && d.paso < PASOS) paso = d.paso;
+    }
+  }catch(e){ R = {}; }
+}
+var guardarTimer = null;
+function guardar(){
+  clearTimeout(guardarTimer);
+  guardarTimer = setTimeout(function(){
+    try{
+      localStorage.setItem(LLAVE, JSON.stringify({r:R, paso:paso, ts:Date.now()}));
+      avisoGuardado();
+    }catch(e){ /* modo privado o storage lleno: seguimos igual */ }
+  }, 350);
+}
+var avisoTimer = null;
+function avisoGuardado(){
+  var el = document.getElementById("guardado");
+  if(!el) return;
+  el.classList.add("ver");
+  clearTimeout(avisoTimer);
+  avisoTimer = setTimeout(function(){ el.classList.remove("ver"); }, 1400);
+}
+
+function respondida(q){
+  var v = R[q.id];
+  if(Array.isArray(v)) return v.length > 0;
+  return typeof v === "string" ? v.trim().length > 0 : v != null;
+}
+function contarBloque(b){
+  var n = 0;
+  b.p.forEach(function(q){ if(respondida(q)) n++; });
+  return n;
+}
+
+/* --- helpers dom --- */
+function el(tag, clase, texto){
+  var e = document.createElement(tag);
+  if(clase) e.className = clase;
+  if(texto != null) e.textContent = texto;
+  return e;
+}
+function crecer(t){
+  t.style.height = "auto";
+  t.style.height = (t.scrollHeight + 2) + "px";
+}
+
+/* --- render de una pregunta --- */
+function renderPregunta(q){
+  var wrap = el("div","pregunta");
+  var cab = el("div","p-cab");
+  cab.appendChild(el("span","p-num mono", String(q.num).padStart(2,"0")));
+  var tit = el("p","p-txt", q.t);
+  tit.id = "lbl-" + q.id;
+  cab.appendChild(tit);
+  if(q.clave) cab.appendChild(el("span","p-clave mono","clave"));
+  wrap.appendChild(cab);
+  if(q.h) wrap.appendChild(el("p","p-ayuda", q.h));
+
+  var campo = el("div","p-campo");
+
+  if(q.tipo === "linea" || q.tipo === "texto"){
+    var inp;
+    if(q.tipo === "linea"){
+      inp = document.createElement("input");
+      inp.type = "text";
+    }else{
+      inp = document.createElement("textarea");
+      inp.rows = 2;
+    }
+    inp.value = R[q.id] || "";
+    inp.placeholder = "Escribí acá…";
+    inp.setAttribute("aria-labelledby", tit.id);
+    inp.addEventListener("input", function(){
+      R[q.id] = inp.value;
+      if(q.tipo === "texto") crecer(inp);
+      refrescarProgreso();
+      guardar();
+    });
+    campo.appendChild(inp);
+    if(q.tipo === "texto") setTimeout(function(){ crecer(inp); }, 0);
+  }
+
+  if(q.tipo === "una" || q.tipo === "varias"){
+    var lista = el("div","ops");
+    lista.setAttribute("role", q.tipo === "una" ? "radiogroup" : "group");
+    lista.setAttribute("aria-labelledby", tit.id);
+    q.ops.forEach(function(op, oi){
+      var lab = el("label","op " + (q.tipo === "una" ? "radio" : "check"));
+      var inp = document.createElement("input");
+      inp.type = q.tipo === "una" ? "radio" : "checkbox";
+      inp.name = q.id;
+      inp.value = op;
+      if(q.tipo === "una"){
+        inp.checked = R[q.id] === op;
+      }else{
+        inp.checked = Array.isArray(R[q.id]) && R[q.id].indexOf(op) > -1;
+      }
+      inp.addEventListener("change", function(){
+        if(q.tipo === "una"){
+          R[q.id] = op;
+        }else{
+          var actual = Array.isArray(R[q.id]) ? R[q.id].slice() : [];
+          var pos = actual.indexOf(op);
+          if(inp.checked && pos === -1) actual.push(op);
+          if(!inp.checked && pos > -1) actual.splice(pos,1);
+          R[q.id] = actual;
+        }
+        lista.querySelectorAll(".op").forEach(function(l){
+          var i = l.querySelector("input");
+          l.querySelector(".op-t").style.fontWeight = i.checked ? "500" : "400";
+        });
+        refrescarProgreso();
+        guardar();
+      });
+      lab.appendChild(inp);
+      lab.appendChild(el("span","caja"));
+      var t = el("span","op-t", op);
+      if(inp.checked) t.style.fontWeight = "500";
+      lab.appendChild(t);
+      lista.appendChild(lab);
+    });
+    campo.appendChild(lista);
+  }
+
+  if(q.tipo === "escala"){
+    var fila = el("div","escala5");
+    var botones = [];
+    for(var i=1; i<=5; i++){
+      (function(valor){
+        var b = el("button","n5 mono", String(valor));
+        b.type = "button";
+        b.setAttribute("aria-pressed", R[q.id] === valor ? "true" : "false");
+        b.addEventListener("click", function(){
+          R[q.id] = valor;
+          botones.forEach(function(x,ix){ x.setAttribute("aria-pressed", (ix+1) === valor ? "true" : "false"); });
+          refrescarProgreso();
+          guardar();
+        });
+        botones.push(b);
+        fila.appendChild(b);
+      })(i);
+    }
+    fila.appendChild(el("span","n5-leyenda","1 = pánico · 5 = me la armo solo"));
+    campo.appendChild(fila);
+  }
+
+  if(q.nota){
+    var nota = el("div","nota");
+    var nid = q.id + "-nota";
+    var lab2 = el("label","","¿Querés aclarar algo?");
+    lab2.setAttribute("for", nid);
+    var ni = document.createElement("input");
+    ni.type = "text";
+    ni.id = nid;
+    ni.value = R[nid] || "";
+    ni.placeholder = "Opcional";
+    ni.addEventListener("input", function(){ R[nid] = ni.value; guardar(); });
+    nota.appendChild(lab2);
+    nota.appendChild(ni);
+    campo.appendChild(nota);
+  }
+
+  wrap.appendChild(campo);
+  return wrap;
+}
+
+/* --- pasos --- */
+function renderIntro(){
+  var c = el("div","intro");
+  c.appendChild(el("p","intro-sub mono","Cuestionario previo · " + TOTAL + " preguntas"));
+  var h = el("h1","intro-h","Antes de dibujar,\nhay que preguntar.");
+  h.style.whiteSpace = "pre-line";
+  c.appendChild(h);
+  var p1 = el("p");
+  p1.innerHTML = "Esto no es un formulario administrativo: es la conversación que normalmente tendríamos tomando un café, pero ordenada. Cuanto más específico seas acá, <strong>menos vueltas vamos a dar después</strong> con diseños que no son lo que tenías en la cabeza.";
+  c.appendChild(p1);
+  var ul = el("ul","reglas");
+  [
+    ["A","No hace falta hacerlo de una sentada. <em>Se guarda solo</em> en este navegador: cerrá y volvé cuando quieras, desde el mismo dispositivo."],
+    ["B","Las preguntas marcadas como <em>clave</em> son las que más cambian el resultado. Si vas corto de tiempo, priorizá esas."],
+    ["C","Si algo no lo sabés, escribí <em>\"no sé\"</em> y seguí. Es una respuesta perfectamente válida y me dice algo."],
+    ["D","Al final hay un botón para <em>copiar todo</em> y mandármelo por WhatsApp o mail."]
+  ].forEach(function(par){
+    var li = document.createElement("li");
+    li.appendChild(el("b","mono",par[0]));
+    var s = el("span");
+    s.innerHTML = par[1];
+    li.appendChild(s);
+    ul.appendChild(li);
+  });
+  c.appendChild(ul);
+  var p2 = el("p");
+  p2.innerHTML = "Calculá unos <strong>25 a 40 minutos</strong> si lo hacés con ganas. El bloque de las obras es el más largo y el más importante.";
+  c.appendChild(p2);
+  return c;
+}
+
+function renderBloque(b){
+  var c = document.createDocumentFragment();
+  var rot = el("div","rotulo");
+  rot.appendChild(el("div","rotulo-n mono", b.n));
+  var txt = el("div");
+  txt.appendChild(el("h2","rotulo-t", b.t));
+  txt.appendChild(el("p","rotulo-d", b.d));
+  rot.appendChild(txt);
+  c.appendChild(rot);
+  var lista = el("div","preguntas");
+  b.p.forEach(function(q){ lista.appendChild(renderPregunta(q)); });
+  c.appendChild(lista);
+  return c;
+}
+
+function textoRespuestas(){
+  var out = [];
+  out.push("BRIEF PARA LA WEB DEL ESTUDIO");
+  out.push("Completado el " + new Date().toLocaleDateString("es-AR", {day:"2-digit", month:"long", year:"numeric"}));
+  var hechas = TODAS.filter(respondida).length;
+  out.push("Respondidas: " + hechas + " de " + TOTAL);
+  out.push("");
+  BLOQUES.forEach(function(b){
+    var lineas = [];
+    b.p.forEach(function(q){
+      if(!respondida(q)) return;
+      var v = R[q.id];
+      if(Array.isArray(v)) v = v.join(" · ");
+      if(q.tipo === "escala") v = v + " de 5";
+      var nota = R[q.id + "-nota"];
+      if(nota && nota.trim()) v = v + "\n   (aclaración: " + nota.trim() + ")";
+      lineas.push(String(q.num).padStart(2,"0") + ". " + q.t + "\n   " + String(v).trim());
+    });
+    if(!lineas.length) return;
+    out.push("──────────────────────────────");
+    out.push(b.n + " · " + b.t.toUpperCase());
+    out.push("");
+    out.push(lineas.join("\n\n"));
+    out.push("");
+  });
+  var faltan = TODAS.filter(function(q){ return q.clave && !respondida(q); });
+  if(faltan.length){
+    out.push("──────────────────────────────");
+    out.push("SIN RESPONDER (preguntas clave): " + faltan.map(function(q){ return String(q.num).padStart(2,"0"); }).join(", "));
+  }
+  return out.join("\n");
+}
+
+function renderResumen(){
+  var c = document.createDocumentFragment();
+  var rot = el("div","rotulo");
+  rot.appendChild(el("div","rotulo-n mono","✓"));
+  var txt = el("div");
+  var hechas = TODAS.filter(respondida).length;
+  txt.appendChild(el("h2","rotulo-t", hechas === TOTAL ? "Listo, contestaste todo." : "Casi. Ahora mandámelo."));
+  txt.appendChild(el("p","rotulo-d","Respondiste " + hechas + " de " + TOTAL + " preguntas. Copiá el texto y pasámelo por WhatsApp o mail — tus respuestas quedan guardadas acá por si querés seguir después."));
+  rot.appendChild(txt);
+  c.appendChild(rot);
+
+  var caja = el("div","res-caja");
+  var acc = el("div","acciones");
+  var btn = el("button","nav primario","Copiar todas las respuestas");
+  btn.type = "button";
+  var aviso = el("span","contador mono","");
+  btn.addEventListener("click", function(){
+    var txt2 = textoRespuestas();
+    var ok = function(){ aviso.textContent = "copiado ✓"; setTimeout(function(){ aviso.textContent = ""; }, 2500); };
+    var mal = function(){
+      aviso.textContent = "no pude copiar — usá el cuadro de abajo";
+      var d = document.getElementById("detalleTexto");
+      if(d) d.open = true;
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt2).then(ok, mal);
+    }else{
+      mal();
+    }
+  });
+  acc.appendChild(btn);
+  acc.appendChild(aviso);
+  caja.appendChild(acc);
+  c.appendChild(caja);
+
+  var faltan = TODAS.filter(function(q){ return q.clave && !respondida(q); });
+  if(faltan.length){
+    var f = el("div","faltan");
+    f.appendChild(el("h3","","Te faltan " + faltan.length + " preguntas clave"));
+    var ul = document.createElement("ul");
+    faltan.forEach(function(q){
+      var li = el("li","", String(q.num).padStart(2,"0") + ". " + q.t);
+      li.addEventListener("click", function(){ ir(q.bloque + 1); });
+      ul.appendChild(li);
+    });
+    f.appendChild(ul);
+    c.appendChild(f);
+  }
+
+  var det = el("details");
+  det.id = "detalleTexto";
+  var sum = el("summary","","Ver el texto completo para copiarlo a mano");
+  det.appendChild(sum);
+  var ta = document.createElement("textarea");
+  ta.id = "volcado";
+  ta.readOnly = true;
+  ta.value = textoRespuestas();
+  det.appendChild(ta);
+  c.appendChild(det);
+
+  return c;
+}
+
+/* --- navegacion --- */
+function ir(p){
+  paso = Math.max(0, Math.min(PASOS - 1, p));
+  render();
+  guardar();
+  var hoja = document.getElementById("hoja");
+  window.scrollTo({top:0, behavior:"auto"});
+  hoja.focus({preventScroll:true});
+}
+
+function refrescarProgreso(){
+  var hechas = TODAS.filter(respondida).length;
+  var cont = document.getElementById("cont");
+  if(cont) cont.textContent = hechas + " / " + TOTAL;
+  var lleno = document.getElementById("escalaLleno");
+  if(lleno) lleno.style.width = (hechas / TOTAL * 100) + "%";
+  document.querySelectorAll(".chip").forEach(function(chip){
+    var bi = parseInt(chip.dataset.bloque, 10);
+    if(isNaN(bi)) return;
+    var b = BLOQUES[bi];
+    var n = contarBloque(b);
+    var punto = chip.querySelector(".punto");
+    punto.className = "punto" + (n === 0 ? "" : (n === b.p.length ? " lleno" : " parcial"));
+  });
+}
+
+function renderChips(){
+  var cont = document.getElementById("chips");
+  cont.innerHTML = "";
+  var inicio = el("button","chip mono","Inicio");
+  inicio.type = "button";
+  inicio.addEventListener("click", function(){ ir(0); });
+  if(paso === 0) inicio.setAttribute("aria-current","true");
+  cont.appendChild(inicio);
+  BLOQUES.forEach(function(b, bi){
+    var chip = el("button","chip mono");
+    chip.type = "button";
+    chip.dataset.bloque = String(bi);
+    chip.appendChild(el("span","punto"));
+    chip.appendChild(el("span","", b.n));
+    chip.title = b.t;
+    chip.setAttribute("aria-label", "Bloque " + b.n + ": " + b.t);
+    if(paso === bi + 1){
+      chip.setAttribute("aria-current","true");
+      setTimeout(function(){ chip.scrollIntoView({block:"nearest", inline:"center"}); }, 0);
+    }
+    chip.addEventListener("click", function(){ ir(bi + 1); });
+    cont.appendChild(chip);
+  });
+  var fin = el("button","chip mono","Fin");
+  fin.type = "button";
+  fin.addEventListener("click", function(){ ir(PASOS - 1); });
+  if(paso === PASOS - 1) fin.setAttribute("aria-current","true");
+  cont.appendChild(fin);
+}
+
+function render(){
+  var hoja = document.getElementById("hoja");
+  hoja.innerHTML = "";
+  if(paso === 0){
+    hoja.appendChild(renderIntro());
+  }else if(paso === PASOS - 1){
+    hoja.appendChild(renderResumen());
+  }else{
+    hoja.appendChild(renderBloque(BLOQUES[paso - 1]));
+  }
+  var prev = document.getElementById("btnPrev");
+  var next = document.getElementById("btnNext");
+  prev.disabled = paso === 0;
+  prev.textContent = "← Anterior";
+  if(paso === 0){
+    next.textContent = "Empezar →";
+  }else if(paso === PASOS - 2){
+    next.textContent = "Terminar →";
+  }else if(paso === PASOS - 1){
+    next.textContent = "Volver al inicio";
+  }else{
+    next.textContent = "Siguiente →";
+  }
+  renderChips();
+  refrescarProgreso();
+}
+
+document.getElementById("btnPrev").addEventListener("click", function(){ ir(paso - 1); });
+document.getElementById("btnNext").addEventListener("click", function(){
+  if(paso === PASOS - 1) ir(0); else ir(paso + 1);
+});
+document.getElementById("btnBorrar").addEventListener("click", function(){
+  if(!window.confirm("¿Seguro? Se borran todas las respuestas de este navegador y no hay vuelta atrás.")) return;
+  R = {};
+  try{ localStorage.removeItem(LLAVE); }catch(e){}
+  ir(0);
+});
+
+/* ticks de la escala grafica: uno por bloque */
+(function(){
+  var t = document.getElementById("ticks");
+  for(var i=0; i<BLOQUES.length; i++) t.appendChild(document.createElement("span"));
+})();
+
+cargar();
+render();
+})();
+</script>
+</body>
+</html>
