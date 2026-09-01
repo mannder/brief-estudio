@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Segunda vuelta del cuestionario: lo que quedó abierto.">
+<title>Fijar coordenadas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root{
+  --ground:#E4E7EA;
+  --sheet:#FFFFFF;
+  --ink:#14181C;
+  --ink-soft:#5C666F;
+  --ink-faint:#909AA3;
+  --line:#D5DADF;
+  --line-soft:#E9ECEF;
+  --accent:#23568A;
+  --accent-on:#FFFFFF;
+  --accent-wash:#E9EFF6;
+  --marca:#A9433A;
+  --ok:#3D7A5C;
+  --shadow:0 1px 2px rgba(20,24,28,.05), 0 8px 24px -12px rgba(20,24,28,.18);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0E1114;
+    --sheet:#171B20;
+    --ink:#E3E7EB;
+    --ink-soft:#98A2AB;
+    --ink-faint:#6C767F;
+    --line:#2B323A;
+    --line-soft:#21272D;
+    --accent:#84B4E8;
+    --accent-on:#0E1114;
+    --accent-wash:#1A2937;
+    --marca:#DC8F85;
+    --ok:#7FBFA0;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0E1114;
+  --sheet:#171B20;
+  --ink:#E3E7EB;
+  --ink-soft:#98A2AB;
+  --ink-faint:#6C767F;
+  --line:#2B323A;
+  --line-soft:#21272D;
+  --accent:#84B4E8;
+  --accent-on:#0E1114;
+  --accent-wash:#1A2937;
+  --marca:#DC8F85;
+  --ok:#7FBFA0;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--ink);
+  font-family:"Archivo","Helvetica Neue",Arial,sans-serif;
+  font-size:16px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+
+.barra{position:sticky; top:0; z-index:20; background:var(--ground); border-bottom:1px solid var(--line)}
+.barra-in{
+  max-width:820px; margin:0 auto; padding:11px 20px;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+.marca-nombre{font-size:13px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; margin:0}
+.contador{font-size:11px; letter-spacing:.08em; color:var(--ink-soft); font-variant-numeric:tabular-nums; white-space:nowrap; margin:0}
+.guardado{color:var(--ok); opacity:0; transition:opacity .25s}
+.guardado.ver{opacity:1}
+
+main{max-width:820px; margin:0 auto; padding:24px 20px 80px}
+.hoja{background:var(--sheet); border:1px solid var(--line); box-shadow:var(--shadow); padding:36px 32px 32px}
+
+.intro-sub{font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); margin:0 0 10px}
+.intro-h{font-size:34px; font-weight:700; letter-spacing:-.03em; margin:0 0 14px; line-height:1.08; text-wrap:balance}
+.intro p{max-width:62ch; color:var(--ink-soft); font-size:16px; margin:0 0 12px}
+.intro p strong{color:var(--ink); font-weight:600}
+
+/* marcador de seccion: una cruz de coordenadas */
+.seccion{
+  display:flex; align-items:flex-start; gap:16px;
+  margin:44px 0 4px; padding-top:26px; border-top:1px solid var(--line);
+}
+.seccion:first-of-type{margin-top:34px}
+.cruz{position:relative; flex:0 0 26px; height:26px; margin-top:2px}
+.cruz::before, .cruz::after{content:""; position:absolute; background:var(--accent)}
+.cruz::before{left:0; right:0; top:50%; height:1px}
+.cruz::after{top:0; bottom:0; left:50%; width:1px}
+.seccion-t{margin:0; font-size:21px; font-weight:600; letter-spacing:-.015em; text-wrap:balance}
+.seccion-d{margin:4px 0 0; color:var(--ink-soft); font-size:14.5px; max-width:58ch}
+
+.pregunta{padding:24px 0; border-bottom:1px solid var(--line-soft)}
+.pregunta:last-child{border-bottom:0}
+.p-cab{display:flex; gap:12px; align-items:baseline}
+.p-num{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-faint); font-variant-numeric:tabular-nums; flex:0 0 24px; padding-top:3px}
+.p-txt{font-size:18px; font-weight:500; line-height:1.35; letter-spacing:-.01em; text-wrap:balance; margin:0}
+.p-ayuda{margin:6px 0 0 36px; font-size:14px; color:var(--ink-soft); max-width:58ch}
+.p-ayuda em{color:var(--ink); font-style:normal; font-weight:500}
+.p-campo{margin:14px 0 0 36px; max-width:60ch}
+
+input[type=text], textarea{
+  width:100%; font:inherit; font-size:16px; color:var(--ink); background:transparent;
+  border:0; border-bottom:1.5px solid var(--line); padding:7px 2px; border-radius:0;
+  transition:border-color .15s; resize:none; overflow:hidden;
+}
+input[type=text]:hover, textarea:hover{border-bottom-color:var(--ink-faint)}
+input[type=text]:focus, textarea:focus{outline:none; border-bottom-color:var(--accent)}
+input[type=text]::placeholder, textarea::placeholder{color:var(--ink-faint)}
+
+.ops{display:flex; flex-direction:column; gap:1px}
+.op{display:flex; align-items:flex-start; gap:10px; padding:9px 10px; cursor:pointer; border:1px solid transparent; font-size:15.5px; line-height:1.4}
+.op:hover{background:var(--accent-wash); border-color:var(--accent-wash)}
+.op input{position:absolute; opacity:0; width:0; height:0}
+.caja{flex:0 0 auto; width:15px; height:15px; margin-top:3px; border:1.5px solid var(--ink-faint); background:transparent; display:flex; align-items:center; justify-content:center}
+.op.radio .caja{border-radius:50%}
+.op input:focus-visible + .caja{outline:2px solid var(--accent); outline-offset:2px}
+.op input:checked + .caja{border-color:var(--accent); background:var(--accent)}
+.op input:checked + .caja::after{content:""; width:5px; height:5px; background:var(--accent-on)}
+.op.radio input:checked + .caja::after{border-radius:50%}
+.op-t{color:var(--ink-soft)}
+
+.nota{margin-top:10px}
+.nota label{display:block; font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:2px}
+
+.cierre{margin-top:40px; padding-top:26px; border-top:1px solid var(--line)}
+.cierre h2{font-size:21px; font-weight:600; letter-spacing:-.015em; margin:0 0 6px}
+.cierre p{color:var(--ink-soft); font-size:15px; margin:0 0 16px; max-width:58ch}
+.acciones{display:flex; gap:12px; flex-wrap:wrap; align-items:center}
+button.nav{font:inherit; font-size:14.5px; font-weight:500; padding:12px 22px; cursor:pointer; border:1px solid var(--ink); background:var(--ink); color:var(--ground)}
+button.nav:hover{opacity:.87}
+button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.aviso{font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--ok)}
+details{margin-top:22px; border-top:1px solid var(--line-soft); padding-top:14px}
+summary{cursor:pointer; font-size:14px; color:var(--ink-soft)}
+summary:hover{color:var(--ink)}
+#volcado{width:100%; margin-top:12px; min-height:200px; font-family:"IBM Plex Mono",monospace; font-size:12.5px; line-height:1.6; border:1px solid var(--line); padding:12px; overflow:auto; resize:vertical; white-space:pre-wrap}
+.pie-legal{max-width:820px; margin:0 auto; padding:0 20px 40px; font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-faint); display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap}
+.borrar{background:none; border:0; color:var(--ink-faint); font:inherit; cursor:pointer; padding:0; text-decoration:underline}
+.borrar:hover{color:var(--marca)}
+
+@media (max-width:640px){
+  .hoja{padding:26px 18px 24px}
+  main{padding:16px 12px 72px}
+  .intro-h{font-size:27px}
+  .seccion-t{font-size:19px}
+  .p-txt{font-size:17px}
+  .p-ayuda,.p-campo{margin-left:0}
+  button.nav{width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+
+<div class="barra">
+  <div class="barra-in">
+    <p class="marca-nombre">Brief · Segunda vuelta</p>
+    <p class="contador mono"><span id="cont">0 / 13</span> <span class="guardado" id="guardado">· guardado</span></p>
+  </div>
+</div>
+
+<main>
+  <section class="hoja">
+    <div class="intro">
+      <p class="intro-sub mono">Segunda vuelta · <span id="cuantas">13</span> preguntas</p>
+      <h1 class="intro-h">Trece cosas y arrancamos.</h1>
+      <p>Contestaste 62 de 67, y contestaste bien: de ahí salió casi todo lo que necesitaba. Quedaron algunas puntas sueltas, y un par de lugares donde dijiste dos cosas distintas — culpa mía, las preguntas estaban repartidas en bloques que quedaban lejos uno del otro.</p>
+      <p>La mayoría se contestan en una línea. <strong>Calculá quince minutos.</strong> Se guarda solo, igual que la vez pasada, y al final está el botón para copiar y mandarme todo.</p>
+    </div>
+    <div id="formulario"></div>
+
+    <div class="cierre">
+      <h2>Listo</h2>
+      <p>Copiá y mandámelo por donde te quede más cómodo.</p>
+      <div class="acciones">
+        <button class="nav" type="button" id="btnCopiar">Copiar todas las respuestas</button>
+        <span class="aviso mono" id="aviso"></span>
+      </div>
+      <details id="detalleTexto">
+        <summary>Ver el texto completo para copiarlo a mano</summary>
+        <textarea id="volcado" readonly></textarea>
+      </details>
+    </div>
+  </section>
+</main>
+
+<div class="pie-legal">
+  <span>Tus respuestas se guardan solas en este navegador.</span>
+  <button class="borrar" id="btnBorrar" type="button">Borrar todo y empezar de nuevo</button>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var SECCIONES = [
+{
+  t:"El nombre",
+  d:"Esto es lo más importante de las trece, porque de acá cuelga la navegación entera del sitio.",
+  p:[
+    {
+      t:"¿Qué son el 34 y el 56?",
+      h:"Te lo pregunto en serio, no es un detalle. Si son coordenadas hay algo que no me cierra: Buenos Aires está en 34° sur, pero 58° oeste, no 56°. Con 56° nos vamos a la otra orilla, a Uruguay. Y noté otra cosa: <em>34 + 56 = 90</em>, que es lo que suman los ángulos de una escuadra. Necesito saber cuál de las dos cosas es, porque la navegación que me describiste cambia por completo según la respuesta.",
+      tipo:"una",
+      ops:["Son coordenadas geográficas","Son ángulos: 34 + 56 = 90","Es otra cosa"],
+      nota:true, notaLabel:"Contame qué representan"
+    },
+    {
+      t:"Si son coordenadas, ¿de qué punto exactamente?",
+      h:"Para armar la cruz con los ejes y el salto al mapa que me describiste, necesito el punto exacto. Si no son coordenadas, saltala.",
+      tipo:"texto"
+    },
+    {
+      t:"El nombre no puede llevar ° ni | en una dirección web. ¿Cómo lo escribimos?",
+      h:"Esos caracteres no existen en una URL. Chequeé cuáles están libres y estos cuatro lo están, en .com y también en .com.ar. Elegí uno o proponé otro.",
+      tipo:"una",
+      ops:["3456arquitectura.com","estudio3456.com","alvaradoarquitecto.com","alvaradoarq.com","Ninguno, se me ocurre otro"],
+      nota:true, notaLabel:"Tu propuesta, si tenés una"
+    },
+    {
+      t:"Cuando dijiste que el nombre ya está registrado, ¿registrado dónde?",
+      h:"Lo pregunto para no meternos en un problema más adelante.",
+      tipo:"una",
+      ops:["Marca registrada en el INPI","En trámite","Lo uso hace años pero no está registrado","Me refería a otra cosa"],
+      nota:true
+    }
+  ]
+},
+{
+  t:"Tres lugares donde dijiste dos cosas distintas",
+  d:"Ninguna está mal: las dos posturas se sostienen. Solo necesito que elijas una.",
+  p:[
+    {
+      t:"El proceso: ¿lo explicamos o no?",
+      h:"Marcaste que el cliente necesita <em>que le expliques cómo es el proceso</em>, y que querés mostrar <em>nuestra forma de proceder</em>. Pero después dijiste que explicarlo paso a paso no hace falta. Mi opinión, para que la tengas: los cuatro miedos que vos mismo enumeraste — cuánto cuesta, cuánto tarda, cómo son los procesos de obra, cuáles son los límites de los alcances — se contestan exactamente ahí.",
+      tipo:"una",
+      ops:["Sí, una sección corta de proceso","Sí, pero breve y adentro de Servicios","No, dejémoslo afuera"]
+    },
+    {
+      t:"El blog: ¿lo sacamos?",
+      h:"Pediste una sección de Novedades, pero también me dijiste que el sitio va a quedar quieto. Un blog cuya última entrada es de hace dos años juega en contra, transmite abandono. Mi propuesta: cambiarlo por <em>Premios y publicaciones</em>, que cumple la misma función de respaldo y no envejece.",
+      tipo:"una",
+      ops:["Sí, cambialo por Premios y publicaciones","Dejá el blog, voy a escribir en serio","Sacá los dos"]
+    },
+    {
+      t:"¿La web habla de plata?",
+      h:"Esta quedó sin contestar. Marcaste que el cliente necesita <em>una idea de los costos</em> y <em>una idea de los plazos</em> para confiar en vos, así que algo hay que decir, aunque sea cómo se cobra y no cuánto.",
+      tipo:"una",
+      ops:["No, que consulten","Explico cómo cobro los honorarios, sin números","Doy rangos orientativos","Solo hablo de plazos y etapas, de costos no"]
+    }
+  ]
+},
+{
+  t:"Lo que quedó en blanco",
+  d:"Cinco huecos del cuestionario anterior. Cuatro son de escribir nomás.",
+  p:[
+    {
+      t:"La frase: qué hacés y para quién.",
+      h:"Me pusiste \"difícil, tengo que pensarla\". Es lo primero que se va a leer en el sitio, así que la necesito sí o sí. No tiene que salir perfecta: tirame tres intentos torpes y yo la afilo.",
+      tipo:"texto"
+    },
+    {
+      t:"Las tres palabras que NO querés que nadie sienta.",
+      h:"Me diste las cinco que sí: austero, concreto, sobrio, riguroso, transparente. Faltan las tres del otro lado, y para descartar caminos me sirven más que las cinco primeras.",
+      tipo:"texto"
+    },
+    {
+      t:"Premios, publicaciones, notas, docencia, jurados.",
+      h:"Pediste una sección de Premios y marcaste que el cliente confía por eso, pero esta quedó vacía. Listá todo, aunque te parezca poco o viejo.",
+      tipo:"texto"
+    },
+    {
+      t:"¿Hay alguna obra que no se pueda publicar?",
+      h:"Pienso sobre todo en el Ministerio de Educación y en la cooperativa: ¿hay que pedirle permiso a alguien, hay algo que no pueda mostrarse, o algún nombre que no convenga que aparezca?",
+      tipo:"texto"
+    },
+    {
+      t:"Una o dos webs que NO te gusten, y por qué.",
+      h:"Es la única importante que te salteaste. Ya sé que tenés tu propia idea para el diseño, y me parece bien — pero saber qué te espanta me ahorra proponerte cosas que ya sabés que no.",
+      tipo:"texto"
+    }
+  ]
+},
+{
+  t:"Una decisión nueva",
+  d:"Salió de tus propias respuestas y no estaba en el cuestionario anterior.",
+  p:[
+    {
+      t:"El inglés: ¿quién traduce?",
+      h:"Pediste español e inglés, y también dijiste que los textos de las obras los escribís vos. Eso significa escribir todo dos veces, y es trabajo de verdad. La tercera opción no es hacer trampa: es la más común.",
+      tipo:"una",
+      ops:["Traduzco yo","Consigo a alguien que traduzca","Arrancamos solo en español y lo sumamos después"]
+    }
+  ]
+}
+];
+
+var TOTAL = 0;
+SECCIONES.forEach(function(s, si){
+  s.letra = String.fromCharCode(65 + si);
+  s.p.forEach(function(q){ TOTAL++; q.num = TOTAL; q.id = "p" + TOTAL; });
+});
+var TODAS = SECCIONES.reduce(function(a,s){ return a.concat(s.p); }, []);
+
+var LLAVE = "brief-arquitecto-v2";
+var R = {};
+
+function cargar(){
+  try{
+    var crudo = localStorage.getItem(LLAVE);
+    if(!crudo) return;
+    var d = JSON.parse(crudo);
+    if(d && typeof d === "object" && d.r && typeof d.r === "object") R = d.r;
+  }catch(e){ R = {}; }
+}
+var guardarTimer = null;
+function guardar(){
+  clearTimeout(guardarTimer);
+  guardarTimer = setTimeout(function(){
+    try{
+      localStorage.setItem(LLAVE, JSON.stringify({r:R, ts:Date.now()}));
+      avisoGuardado();
+    }catch(e){}
+  }, 350);
+}
+var avisoTimer = null;
+function avisoGuardado(){
+  var el = document.getElementById("guardado");
+  if(!el) return;
+  el.classList.add("ver");
+  clearTimeout(avisoTimer);
+  avisoTimer = setTimeout(function(){ el.classList.remove("ver"); }, 1400);
+}
+
+function respondida(q){
+  var v = R[q.id];
+  return typeof v === "string" ? v.trim().length > 0 : v != null;
+}
+function el(tag, clase, texto){
+  var e = document.createElement(tag);
+  if(clase) e.className = clase;
+  if(texto != null) e.textContent = texto;
+  return e;
+}
+function crecer(t){ t.style.height = "auto"; t.style.height = (t.scrollHeight + 2) + "px"; }
+
+function refrescar(){
+  var hechas = TODAS.filter(respondida).length;
+  document.getElementById("cont").textContent = hechas + " / " + TOTAL;
+  var v = document.getElementById("volcado");
+  if(v) v.value = textoRespuestas();
+}
+
+function renderPregunta(q){
+  var wrap = el("div","pregunta");
+  var cab = el("div","p-cab");
+  cab.appendChild(el("span","p-num mono", String(q.num).padStart(2,"0")));
+  var tit = el("p","p-txt", q.t);
+  tit.id = "lbl-" + q.id;
+  cab.appendChild(tit);
+  wrap.appendChild(cab);
+  if(q.h){
+    var ay = el("p","p-ayuda");
+    ay.innerHTML = q.h;
+    wrap.appendChild(ay);
+  }
+  var campo = el("div","p-campo");
+
+  if(q.tipo === "texto"){
+    var ta = document.createElement("textarea");
+    ta.rows = 2;
+    ta.value = R[q.id] || "";
+    ta.placeholder = "Escribí acá…";
+    ta.setAttribute("aria-labelledby", tit.id);
+    ta.addEventListener("input", function(){
+      R[q.id] = ta.value; crecer(ta); refrescar(); guardar();
+    });
+    campo.appendChild(ta);
+    setTimeout(function(){ crecer(ta); }, 0);
+  }
+
+  if(q.tipo === "una"){
+    var lista = el("div","ops");
+    lista.setAttribute("role","radiogroup");
+    lista.setAttribute("aria-labelledby", tit.id);
+    q.ops.forEach(function(op){
+      var lab = el("label","op radio");
+      var inp = document.createElement("input");
+      inp.type = "radio";
+      inp.name = q.id;
+      inp.value = op;
+      inp.checked = R[q.id] === op;
+      inp.addEventListener("change", function(){
+        R[q.id] = op;
+        lista.querySelectorAll(".op").forEach(function(l){
+          l.querySelector(".op-t").style.fontWeight = l.querySelector("input").checked ? "500" : "400";
+        });
+        refrescar(); guardar();
+      });
+      lab.appendChild(inp);
+      lab.appendChild(el("span","caja"));
+      var t = el("span","op-t", op);
+      if(inp.checked) t.style.fontWeight = "500";
+      lab.appendChild(t);
+      lista.appendChild(lab);
+    });
+    campo.appendChild(lista);
+  }
+
+  if(q.nota){
+    var nota = el("div","nota");
+    var nid = q.id + "-nota";
+    var lab2 = el("label","", q.notaLabel || "¿Querés aclarar algo?");
+    lab2.setAttribute("for", nid);
+    var ni = document.createElement("input");
+    ni.type = "text";
+    ni.id = nid;
+    ni.value = R[nid] || "";
+    ni.placeholder = "Opcional";
+    ni.addEventListener("input", function(){ R[nid] = ni.value; refrescar(); guardar(); });
+    nota.appendChild(lab2);
+    nota.appendChild(ni);
+    campo.appendChild(nota);
+  }
+
+  wrap.appendChild(campo);
+  return wrap;
+}
+
+function render(){
+  var cont = document.getElementById("formulario");
+  SECCIONES.forEach(function(s){
+    var cab = el("div","seccion");
+    cab.appendChild(el("div","cruz"));
+    var txt = el("div");
+    txt.appendChild(el("h2","seccion-t", s.t));
+    txt.appendChild(el("p","seccion-d", s.d));
+    cab.appendChild(txt);
+    cont.appendChild(cab);
+    s.p.forEach(function(q){ cont.appendChild(renderPregunta(q)); });
+  });
+}
+
+function textoRespuestas(){
+  var out = [];
+  out.push("SEGUNDA VUELTA — BRIEF WEB DEL ESTUDIO");
+  out.push("Completado el " + new Date().toLocaleDateString("es-AR", {day:"2-digit", month:"long", year:"numeric"}));
+  out.push("Respondidas: " + TODAS.filter(respondida).length + " de " + TOTAL);
+  out.push("");
+  SECCIONES.forEach(function(s){
+    var lineas = [];
+    s.p.forEach(function(q){
+      if(!respondida(q)) return;
+      var v = String(R[q.id]).trim();
+      var nota = R[q.id + "-nota"];
+      if(nota && nota.trim()) v = v + "\n   (aclaración: " + nota.trim() + ")";
+      lineas.push(String(q.num).padStart(2,"0") + ". " + q.t + "\n   " + v);
+    });
+    if(!lineas.length) return;
+    out.push("──────────────────────────────");
+    out.push(s.letra + " · " + s.t.toUpperCase());
+    out.push("");
+    out.push(lineas.join("\n\n"));
+    out.push("");
+  });
+  var faltan = TODAS.filter(function(q){ return !respondida(q); });
+  if(faltan.length){
+    out.push("──────────────────────────────");
+    out.push("SIN RESPONDER: " + faltan.map(function(q){ return String(q.num).padStart(2,"0"); }).join(", "));
+  }
+  return out.join("\n");
+}
+
+document.getElementById("btnCopiar").addEventListener("click", function(){
+  var aviso = document.getElementById("aviso");
+  var txt = textoRespuestas();
+  var mal = function(){
+    aviso.textContent = "no pude copiar — usá el cuadro de abajo";
+    document.getElementById("detalleTexto").open = true;
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){
+      aviso.textContent = "copiado ✓";
+      setTimeout(function(){ aviso.textContent = ""; }, 2500);
+    }, mal);
+  }else{ mal(); }
+});
+
+document.getElementById("btnBorrar").addEventListener("click", function(){
+  if(!window.confirm("¿Seguro? Se borran todas las respuestas de este navegador y no hay vuelta atrás.")) return;
+  R = {};
+  try{ localStorage.removeItem(LLAVE); }catch(e){}
+  document.getElementById("formulario").innerHTML = "";
+  render();
+  refrescar();
+});
+
+cargar();
+render();
+document.getElementById("cuantas").textContent = TOTAL;
+refrescar();
+})();
+</script>
+</body>
+</html>
