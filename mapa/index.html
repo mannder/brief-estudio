@@ -1,0 +1,755 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="dark light">
+<meta name="description" content="Prototipo de navegación por coordenadas.">
+<title>Cruz de coordenadas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+/* Oscuro por defecto: es el espacio modelo del AutoCAD. */
+:root{
+  --ground:#0D1013;
+  --panel:#12161A;
+  --ink:#DFE4E8;
+  --ink-soft:#8B959E;
+  --ink-faint:#5A646D;
+  --line:#242B32;
+  --grilla:#1C2228;
+  --grilla-fuerte:#2A333B;
+  --cruz:#C9D2D9;
+  --accent:#6FA8DC;
+  --accent-on:#0D1013;
+  --marca:#D98A7E;
+}
+:root[data-tema="claro"]{
+  --ground:#F2F3F4;
+  --panel:#FFFFFF;
+  --ink:#14181C;
+  --ink-soft:#5C666F;
+  --ink-faint:#98A2AA;
+  --line:#D7DCE1;
+  --grilla:#E4E8EB;
+  --grilla-fuerte:#CFD6DC;
+  --cruz:#2B333A;
+  --accent:#1E5A8A;
+  --accent-on:#FFFFFF;
+  --marca:#A9433A;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"Archivo","Helvetica Neue",Arial,sans-serif;
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+
+#lamina{position:fixed; inset:0; display:block; touch-action:none; cursor:none}
+body.touch #lamina{cursor:default}
+
+/* rotulo, arriba a la izquierda, como la caratula de un plano */
+.rotulo{
+  position:fixed; top:23px; left:47px; z-index:5;
+  border-right:1px solid var(--line); border-bottom:1px solid var(--line);
+  background:color-mix(in srgb, var(--ground) 86%, transparent);
+  backdrop-filter:blur(3px);
+  padding:12px 18px 11px; max-width:min(62vw, 380px);
+}
+.rotulo h1{
+  margin:0; font-size:14px; font-weight:600; letter-spacing:.2em;
+  font-family:"IBM Plex Mono",monospace;
+}
+.rotulo p{margin:4px 0 0; font-size:11.5px; color:var(--ink-soft); line-height:1.45}
+.aviso-proto{
+  display:inline-block; margin-top:7px; padding:2px 6px;
+  font-family:"IBM Plex Mono",monospace; font-size:9.5px; letter-spacing:.13em;
+  text-transform:uppercase; color:var(--marca); border:1px solid var(--marca);
+}
+
+/* controles arriba a la derecha */
+.controles{position:fixed; top:23px; right:0; z-index:6; display:flex; border-left:1px solid var(--line); border-bottom:1px solid var(--line)}
+.ctrl{
+  font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.06em;
+  background:color-mix(in srgb, var(--ground) 86%, transparent);
+  color:var(--ink-soft); border:0; border-left:1px solid var(--line);
+  padding:11px 13px; cursor:pointer; min-width:42px;
+}
+.ctrl:first-child{border-left:0}
+.ctrl:hover{color:var(--ink); background:var(--panel)}
+.ctrl[aria-pressed="true"]{color:var(--accent)}
+
+/* barra de estado, abajo, como la del AutoCAD */
+.estado{
+  position:fixed; left:0; right:0; bottom:0; z-index:5;
+  display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+  border-top:1px solid var(--line);
+  background:color-mix(in srgb, var(--ground) 90%, transparent);
+  backdrop-filter:blur(3px);
+  padding:9px 18px;
+  font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--ink-soft);
+  font-variant-numeric:tabular-nums;
+}
+.estado b{color:var(--ink); font-weight:500}
+.estado .sep{color:var(--ink-faint)}
+.pista{margin-left:auto; color:var(--ink-faint); font-size:11px}
+
+/* panel lateral con el listado accesible */
+.panel{
+  position:fixed; top:0; right:0; bottom:0; z-index:7; width:min(88vw, 330px);
+  background:var(--panel); border-left:1px solid var(--line);
+  transform:translateX(100%); transition:transform .18s ease;
+  display:flex; flex-direction:column;
+}
+.panel.abierto{transform:translateX(0)}
+.panel-cab{padding:14px 18px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; gap:10px}
+.panel-cab h2{margin:0; font-size:12px; font-family:"IBM Plex Mono",monospace; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft)}
+.panel-cerrar{background:none; border:0; color:var(--ink-soft); font-size:18px; line-height:1; cursor:pointer; padding:2px 6px}
+.panel-cerrar:hover{color:var(--ink)}
+.lista{list-style:none; margin:0; padding:0; overflow-y:auto; flex:1}
+.lista li{border-bottom:1px solid var(--line)}
+.lista button{
+  width:100%; text-align:left; background:none; border:0; cursor:pointer;
+  padding:13px 18px; color:var(--ink); font:inherit; font-size:14.5px; line-height:1.35;
+}
+.lista button:hover, .lista button:focus-visible{background:color-mix(in srgb, var(--accent) 12%, transparent)}
+.lista .meta{display:block; margin-top:3px; font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--ink-soft); letter-spacing:.04em}
+.lista button[aria-current="true"]{box-shadow:inset 3px 0 0 var(--accent)}
+
+button:focus-visible, .ctrl:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+
+@media (max-width:760px){
+  .rotulo{max-width:none; right:0; left:47px; border-right:0}
+  .rotulo p{display:none}
+  /* controles abajo del todo; la barra de estado, justo encima */
+  .controles{top:auto; bottom:0; left:0; right:0; border-bottom:0; border-top:1px solid var(--line)}
+  .ctrl{flex:1; text-align:center; padding:13px 6px}
+  .estado{bottom:45px; flex-wrap:nowrap; overflow:hidden}
+  .pista, .amplio{display:none}
+}
+@media (prefers-reduced-motion:reduce){.panel{transition:none}}
+</style>
+</head>
+<body>
+
+<canvas id="lamina"></canvas>
+
+<div class="rotulo">
+  <h1 id="tituloEstudio">34 | 56 | ARQUITECTURA</h1>
+  <p>Cada obra ocupa su lugar real. Movete con el mouse: la cruz engancha la obra más cercana y escribe sus coordenadas sobre los ejes.</p>
+  <span class="aviso-proto">Prototipo · coordenadas de ejemplo</span>
+</div>
+
+<div class="controles">
+  <button class="ctrl" id="btnZoomOut" type="button" title="Alejar">−</button>
+  <button class="ctrl" id="btnZoomIn" type="button" title="Acercar">+</button>
+  <button class="ctrl" id="btnEncuadrar" type="button" title="Ver todo">TODO</button>
+  <button class="ctrl" id="btnTema" type="button" title="Claro / oscuro">CLARO</button>
+  <button class="ctrl" id="btnPanel" type="button" title="Listado de obras">OBRAS</button>
+</div>
+
+<div class="estado">
+  <span>CURSOR <b id="lecturaLat">—</b> <span class="sep">/</span> <b id="lecturaLon">—</b></span>
+  <span class="sep amplio">|</span>
+  <span class="amplio">ESC <b id="lecturaEscala">—</b></span>
+  <span class="pista" id="pista">rueda: zoom · arrastrar: desplazar · click en una obra: abrir</span>
+</div>
+
+<aside class="panel" id="panel" aria-label="Listado de obras">
+  <div class="panel-cab">
+    <h2>Obras · <span id="cantidadObras">0</span></h2>
+    <button class="panel-cerrar" id="btnPanelCerrar" type="button" aria-label="Cerrar listado">×</button>
+  </div>
+  <ul class="lista" id="listaObras"></ul>
+</aside>
+
+<script>
+(function(){
+"use strict";
+
+/* ------------------------------------------------------------------
+   DATOS. Los nombres son reales; las coordenadas son de ejemplo,
+   salvo Cipolletti y el Ministerio, que están donde están de verdad.
+   Reemplazar por las reales cuando Fernando las pase.
+------------------------------------------------------------------- */
+var OBRAS = [
+  {nom:"PEMEW · Ministerio de Educación", anio:2019, estado:"Construida", tipo:"Institucional", lat:-34.6118, lon:-58.3702, glifo:0},
+  {nom:"Casa Cruz",                        anio:2021, estado:"Construida", tipo:"Vivienda",      lat:-34.8712, lon:-58.5104, glifo:1},
+  {nom:"Casa La Atómica",                  anio:2017, estado:"Construida", tipo:"Vivienda",      lat:-34.7205, lon:-58.2531, glifo:2},
+  {nom:"Cooperativa Sensibles en Crecimiento", anio:2022, estado:"Proyecto", tipo:"Vivienda colectiva", lat:-34.6294, lon:-58.4402, glifo:3},
+  {nom:"Complejo Municipal Cipolletti",    anio:2016, estado:"Concurso",   tipo:"Institucional", lat:-38.9339, lon:-68.0004, glifo:4}
+];
+/* El punto que nombra al estudio. Marcado aparte a propósito. */
+var ESTUDIO = {lat:-34.0, lon:-56.0, nom:"34 | 56"};
+
+/* ------------------------------------------------------------------ */
+var cv = document.getElementById("lamina");
+var cx = cv.getContext("2d");
+var W = 0, H = 0, DPR = 1;
+
+var vista = {lat:-36, lon:-62, esc:40};      // esc = px por grado de latitud
+var cursor = {x:-1, y:-1, dentro:false};
+var enganchada = null;                        // obra bajo la cruz
+var seleccionada = null;                      // obra elegida (touch / teclado)
+var esTouch = window.matchMedia("(hover: none)").matches;
+if(esTouch) document.body.classList.add("touch");
+
+var T = {};                                   // colores leídos del CSS
+function leerTokens(){
+  var s = getComputedStyle(document.documentElement);
+  ["ground","panel","ink","ink-soft","ink-faint","line","grilla","grilla-fuerte","cruz","accent","accent-on","marca"]
+    .forEach(function(k){ T[k] = s.getPropertyValue("--" + k).trim(); });
+}
+
+/* ---------- proyección ---------- */
+function kx(){ return Math.cos(vista.lat * Math.PI / 180); }
+function aPantalla(lon, lat){
+  return {
+    x: (lon - vista.lon) * vista.esc * kx() + W/2,
+    y: -(lat - vista.lat) * vista.esc + H/2
+  };
+}
+function aCoords(x, y){
+  return {
+    lon: (x - W/2) / (vista.esc * kx()) + vista.lon,
+    lat: -(y - H/2) / vista.esc + vista.lat
+  };
+}
+
+/* ---------- formato de coordenadas ---------- */
+function dosDig(n){ return (n < 10 ? "0" : "") + n; }
+function gms(v, esLat){
+  var hemi = esLat ? (v < 0 ? "S" : "N") : (v < 0 ? "O" : "E");
+  var a = Math.abs(v);
+  var g = Math.floor(a);
+  var mf = (a - g) * 60;
+  var m = Math.floor(mf);
+  var s = Math.round((mf - m) * 60);
+  if(s === 60){ s = 0; m += 1; }
+  if(m === 60){ m = 0; g += 1; }
+  return g + "°" + dosDig(m) + "'" + dosDig(s) + '" ' + hemi;
+}
+
+/* ---------- grilla ---------- */
+var PASOS = [10, 5, 2, 1, 0.5, 1/6, 1/12, 1/60, 1/120, 1/360, 1/1800];
+/* el paso más fino que todavía deje las divisiones separadas en pantalla.
+   Se recorre desde el más fino: el primero que respire, gana. Si ninguno
+   entra (vista muy alejada), se usa el más grueso. */
+function pasoGrilla(){
+  for(var i = PASOS.length - 1; i >= 0; i--){
+    if(PASOS[i] * vista.esc >= 66) return PASOS[i];
+  }
+  return PASOS[0];
+}
+function etiquetaEscala(){
+  var p = pasoGrilla();
+  if(p >= 1) return p + "° / división";
+  if(p >= 1/60) return Math.round(p * 60) + "' / división";
+  return Math.round(p * 3600) + '" / división';
+}
+
+/* ---------- glifos: dibujos, no fotos ---------- */
+function glifo(g, x, y, r){
+  cx.save();
+  cx.translate(x, y);
+  cx.lineWidth = 1;
+  cx.beginPath();
+  if(g === 0){                       // planta con patio
+    cx.rect(-r, -r, r*2, r*2);
+    cx.moveTo(-r/2.4, -r/2.4); cx.lineTo(r/2.4, -r/2.4);
+    cx.lineTo(r/2.4, r/2.4); cx.lineTo(-r/2.4, r/2.4); cx.closePath();
+  }else if(g === 1){                 // dos volúmenes cruzados
+    cx.rect(-r, -r/2.6, r*2, r/1.3);
+    cx.rect(-r/2.6, -r, r/1.3, r*2);
+  }else if(g === 2){                 // planta en L
+    cx.moveTo(-r, -r); cx.lineTo(r/3, -r); cx.lineTo(r/3, r/3);
+    cx.lineTo(r, r/3); cx.lineTo(r, r); cx.lineTo(-r, r); cx.closePath();
+  }else if(g === 3){                 // tira de vivienda colectiva
+    cx.rect(-r, -r/1.7, r*2, r*1.18);
+    for(var i = 1; i < 4; i++){
+      cx.moveTo(-r + (r*2/4)*i, -r/1.7);
+      cx.lineTo(-r + (r*2/4)*i, r/1.7*0.85);
+    }
+  }else{                             // implantación con eje
+    cx.rect(-r, -r, r*2, r*2);
+    cx.moveTo(-r, r); cx.lineTo(r, -r);
+  }
+  cx.stroke();
+  cx.restore();
+}
+
+/* ---------- dibujo ---------- */
+function dibujar(){
+  cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  cx.clearRect(0, 0, W, H);
+  cx.fillStyle = T.ground;
+  cx.fillRect(0, 0, W, H);
+
+  cajaRotulo = document.querySelector(".rotulo").getBoundingClientRect();
+
+  var paso = pasoGrilla();
+  dibujarGrilla(paso);
+  dibujarEstudio();
+
+  var activa = enganchada || seleccionada;
+
+  /* posiciones primero: hace falta saber quién se pisa con quién */
+  OBRAS.forEach(function(o){
+    var p = aPantalla(o.lon, o.lat);
+    o._x = p.x; o._y = p.y;
+  });
+  OBRAS.forEach(function(o){
+    o._apretada = OBRAS.some(function(q){
+      return q !== o && Math.hypot(q._x - o._x, q._y - o._y) < 38;
+    });
+  });
+
+  OBRAS.forEach(function(o){
+    if(o === activa) return;
+    dibujarObra(o, false);
+  });
+  if(activa) dibujarObra(activa, true);
+
+  avisoRacimo(activa);
+  dibujarCruz(activa);
+}
+
+/* cuando varias obras caen encima, el dibujo no alcanza: hay que acercar */
+function avisoRacimo(activa){
+  var juntas = OBRAS.filter(function(o){ return o._apretada && o !== activa; });
+  if(juntas.length < 2) return;
+  var sx = 0, sy = 0;
+  juntas.forEach(function(o){ sx += o._x; sy += o._y; });
+  var x = sx / juntas.length, y = sy / juntas.length;
+  if(x < REGLA_IZQ || x > W || y < REGLA_SUP || y > H) return;
+  cx.save();
+  cx.strokeStyle = T["ink-faint"];
+  cx.setLineDash([2, 3]);
+  cx.lineWidth = 1;
+  cx.beginPath(); cx.arc(x, y, 30, 0, Math.PI*2); cx.stroke();
+  cx.setLineDash([]);
+  cx.fillStyle = T["ink-soft"];
+  cx.font = '9.5px "IBM Plex Mono", monospace';
+  cx.textBaseline = "top";
+  cx.fillText(juntas.length + " OBRAS · ACERCAR", x - 34, y + 36);
+  cx.restore();
+}
+
+/* la etiqueta de la regla muestra solo lo que el paso justifica:
+   con divisiones de un grado, los segundos son ruido */
+function rotuloGrilla(v, esLat, paso){
+  var hemi = esLat ? (v < 0 ? "S" : "N") : (v < 0 ? "O" : "E");
+  var a = Math.abs(v);
+  var g = Math.floor(a + 1e-9);
+  var mf = (a - g) * 60;
+  var m = Math.floor(mf + 1e-6);
+  var s = Math.round((mf - m) * 60);
+  if(s === 60){ s = 0; m += 1; }
+  if(m === 60){ m = 0; g += 1; }
+  if(paso >= 1)    return g + "° " + hemi;
+  if(paso >= 1/60) return g + "°" + dosDig(m) + "' " + hemi;
+  return g + "°" + dosDig(m) + "'" + dosDig(s) + '" ' + hemi;
+}
+
+var REGLA_SUP = 22, REGLA_IZQ = 46;
+var cajaRotulo = {left:0, right:0, top:0, bottom:0};
+
+function dibujarGrilla(paso){
+  var esq0 = aCoords(0, H), esq1 = aCoords(W, 0);
+  var TOPE = 400;
+  var grado = function(v){ return Math.abs(v - Math.round(v)) < 1e-9; };
+  var marcasLon = [], marcasLat = [];
+
+  cx.lineWidth = 1;
+
+  var lon0 = Math.floor(esq0.lon / paso) * paso, n = 0;
+  for(var lo = lon0; lo <= esq1.lon + paso && n < TOPE; lo += paso, n++){
+    var p = aPantalla(lo, 0);
+    cx.strokeStyle = grado(lo) ? T["grilla-fuerte"] : T.grilla;
+    cx.beginPath(); cx.moveTo(Math.round(p.x) + .5, 0); cx.lineTo(Math.round(p.x) + .5, H); cx.stroke();
+    marcasLon.push({x:Math.round(p.x), v:lo});
+  }
+  var lat0 = Math.floor(esq0.lat / paso) * paso; n = 0;
+  for(var la = lat0; la <= esq1.lat + paso && n < TOPE; la += paso, n++){
+    var q = aPantalla(0, la);
+    cx.strokeStyle = grado(la) ? T["grilla-fuerte"] : T.grilla;
+    cx.beginPath(); cx.moveTo(0, Math.round(q.y) + .5); cx.lineTo(W, Math.round(q.y) + .5); cx.stroke();
+    marcasLat.push({y:Math.round(q.y), v:la});
+  }
+
+  /* bandas de regla, como el marco de una lámina */
+  cx.fillStyle = T.ground;
+  cx.fillRect(0, 0, W, REGLA_SUP);
+  cx.fillRect(0, 0, REGLA_IZQ, H);
+  cx.strokeStyle = T.line;
+  cx.beginPath();
+  cx.moveTo(0, REGLA_SUP + .5); cx.lineTo(W, REGLA_SUP + .5);
+  cx.moveTo(REGLA_IZQ + .5, 0); cx.lineTo(REGLA_IZQ + .5, H);
+  cx.stroke();
+
+  cx.font = '9.5px "IBM Plex Mono", monospace';
+  cx.fillStyle = T["ink-faint"];
+  cx.textBaseline = "middle";
+  marcasLon.forEach(function(m){
+    if(m.x < REGLA_IZQ + 6 || m.x > W - 4) return;
+    cx.fillText(rotuloGrilla(m.v, false, paso), m.x + 4, REGLA_SUP/2);
+  });
+  marcasLat.forEach(function(m){
+    if(m.y < REGLA_SUP + 6 || m.y > H - 4) return;
+    cx.fillText(rotuloGrilla(m.v, true, paso), 4, m.y - 7);
+  });
+}
+
+function dibujarEstudio(){
+  var p = aPantalla(ESTUDIO.lon, ESTUDIO.lat);
+  if(p.x < -60 || p.x > W + 60 || p.y < -60 || p.y > H + 60) return;
+  cx.save();
+  cx.strokeStyle = T.marca;
+  cx.fillStyle = T.marca;
+  cx.lineWidth = 1;
+  cx.beginPath();
+  cx.moveTo(p.x - 9, p.y); cx.lineTo(p.x + 9, p.y);
+  cx.moveTo(p.x, p.y - 9); cx.lineTo(p.x, p.y + 9);
+  cx.stroke();
+  cx.beginPath(); cx.arc(p.x, p.y, 4.5, 0, Math.PI*2); cx.stroke();
+  cx.font = '10px "IBM Plex Mono", monospace';
+  cx.textBaseline = "bottom";
+  var txt = "EL NOMBRE DEL ESTUDIO CAE ACÁ";
+  var an = cx.measureText(txt).width;
+  cx.fillText(txt, p.x + 13 + an > W - 8 ? p.x - 13 - an : p.x + 13, p.y - 4);
+  cx.restore();
+}
+
+function dibujarObra(o, activa){
+  var x = o._x, y = o._y;
+  if(x < -80 || x > W + 80 || y < -80 || y > H + 80) return;
+
+  cx.strokeStyle = activa ? T.accent : T["ink-soft"];
+
+  if(o._apretada && !activa){
+    /* sin lugar para el dibujo: queda el punto, como una marca de nodo */
+    cx.beginPath();
+    cx.moveTo(x - 4, y); cx.lineTo(x + 4, y);
+    cx.moveTo(x, y - 4); cx.lineTo(x, y + 4);
+    cx.lineWidth = 1;
+    cx.stroke();
+    return;
+  }
+
+  glifo(o.glifo, x, y, activa ? 15 : 11);
+
+  if(activa){
+    marcadorEnganche(x, y);
+    fichaUbicacion(o, x, y);
+  }else{
+    cx.save();
+    cx.fillStyle = T["ink-faint"];
+    cx.font = '10px "IBM Plex Mono", monospace';
+    cx.textBaseline = "top";
+    cx.fillText(o.anio.toString(), x + 15, y + 4);
+    cx.restore();
+  }
+}
+
+/* marcador de enganche, como el osnap del AutoCAD */
+function marcadorEnganche(x, y){
+  cx.save();
+  cx.strokeStyle = T.accent;
+  cx.lineWidth = 1.4;
+  cx.strokeRect(x - 21.5, y - 21.5, 43, 43);
+  cx.restore();
+}
+
+/* "cambie de ícono a una imagen de la ubicación": recuadro con
+   la grilla fina del entorno inmediato de la obra */
+function fichaUbicacion(o, x, y){
+  var an = 186, al = 118, m = 30;
+  var fx = x + m, fy = y - al - m*0.4;
+  if(fx + an > W - 12) fx = x - an - m;
+  if(fy < REGLA_SUP + 8) fy = y + m*0.4;
+  /* en pantallas chicas la ficha se salía del marco por cualquiera de los cuatro lados */
+  fx = Math.max(REGLA_IZQ + 6, Math.min(fx, W - an - 6));
+  fy = Math.max(REGLA_SUP + 6, Math.min(fy, H - al - 92));
+
+  cx.save();
+  cx.fillStyle = T.panel;
+  cx.strokeStyle = T.accent;
+  cx.lineWidth = 1;
+  cx.fillRect(fx, fy, an, al);
+  cx.strokeRect(fx + .5, fy + .5, an, al);
+
+  /* línea de conexión, como una directriz de acotación */
+  cx.beginPath();
+  cx.moveTo(x, y);
+  cx.lineTo(fx < x ? fx + an : fx, fy + al/2);
+  cx.strokeStyle = T.accent;
+  cx.stroke();
+
+  /* mini plano: grilla fina centrada en la obra */
+  var mx = fx + 8, my = fy + 8, ma = an - 16, mb = 56;
+  cx.save();
+  cx.beginPath(); cx.rect(mx, my, ma, mb); cx.clip();
+  cx.strokeStyle = T.grilla;
+  cx.lineWidth = 1;
+  for(var i = 0; i <= 8; i++){
+    var gx = mx + (ma/8)*i;
+    cx.beginPath(); cx.moveTo(Math.round(gx)+.5, my); cx.lineTo(Math.round(gx)+.5, my+mb); cx.stroke();
+  }
+  for(var j = 0; j <= 4; j++){
+    var gy = my + (mb/4)*j;
+    cx.beginPath(); cx.moveTo(mx, Math.round(gy)+.5); cx.lineTo(mx+ma, Math.round(gy)+.5); cx.stroke();
+  }
+  cx.strokeStyle = T.accent;
+  cx.lineWidth = 1;
+  var cxx = mx + ma/2, cyy = my + mb/2;
+  cx.beginPath();
+  cx.moveTo(cxx - 12, cyy); cx.lineTo(cxx + 12, cyy);
+  cx.moveTo(cxx, cyy - 12); cx.lineTo(cxx, cyy + 12);
+  cx.stroke();
+  cx.beginPath(); cx.arc(cxx, cyy, 3.5, 0, Math.PI*2); cx.stroke();
+  cx.restore();
+
+  cx.fillStyle = T.ink;
+  cx.font = '500 12.5px Archivo, sans-serif';
+  cx.textBaseline = "top";
+  var nom = o.nom.length > 30 ? o.nom.slice(0, 29) + "…" : o.nom;
+  cx.fillText(nom, fx + 9, my + mb + 8);
+
+  cx.fillStyle = T["ink-soft"];
+  cx.font = '10px "IBM Plex Mono", monospace';
+  cx.fillText(o.anio + "  ·  " + o.estado.toUpperCase(), fx + 9, my + mb + 26);
+  cx.fillText(gms(o.lat, true) + "  " + gms(o.lon, false), fx + 9, my + mb + 39);
+  cx.restore();
+}
+
+/* la cruz: dos rectas de lado a lado, con las coordenadas escritas encima */
+function dibujarCruz(activa){
+  var x, y, lat, lon, viva;
+  if(activa){
+    x = activa._x; y = activa._y; lat = activa.lat; lon = activa.lon; viva = true;
+  }else if(cursor.dentro){
+    x = cursor.x; y = cursor.y;
+    var c = aCoords(x, y); lat = c.lat; lon = c.lon; viva = false;
+  }else{
+    return;
+  }
+
+  cx.save();
+  cx.strokeStyle = viva ? T.accent : T.cruz;
+  cx.globalAlpha = viva ? 1 : .5;
+  cx.lineWidth = 1;
+  cx.beginPath();
+  cx.moveTo(0, Math.round(y) + .5); cx.lineTo(W, Math.round(y) + .5);
+  cx.moveTo(Math.round(x) + .5, 0); cx.lineTo(Math.round(x) + .5, H);
+  cx.stroke();
+  cx.globalAlpha = 1;
+
+  /* latitud sobre la horizontal, longitud sobre la vertical */
+  cx.font = (viva ? '500 ' : '') + '11px "IBM Plex Mono", monospace';
+  cx.fillStyle = viva ? T.accent : T["ink-soft"];
+
+  /* las etiquetas van sobre las líneas, pero contra el marco: cerca del
+     cruce chocaban con la ficha de la obra */
+  var txtLat = gms(lat, true);
+  cx.textBaseline = "bottom";
+  var anchoLat = cx.measureText(txtLat).width;
+  var chocaLat = y > cajaRotulo.top && y < cajaRotulo.bottom + 14;
+  var posLat = chocaLat ? cajaRotulo.right + 12 : REGLA_IZQ + 10;
+  tapar(posLat - 4, y - 15, anchoLat + 8, 14);
+  cx.fillStyle = viva ? T.accent : T["ink-soft"];
+  cx.fillText(txtLat, posLat, y - 4);
+
+  var txtLon = gms(lon, false);
+  cx.save();
+  cx.translate(x, 0);
+  cx.rotate(-Math.PI/2);
+  var anchoLon = cx.measureText(txtLon).width;
+  var chocaLon = x > cajaRotulo.left && x < cajaRotulo.right;
+  var techo = chocaLon ? cajaRotulo.bottom + 12 : REGLA_SUP + 14;
+  var lx = -(techo + anchoLon);
+  tapar(lx - 4, -15, anchoLon + 8, 14);
+  cx.fillStyle = viva ? T.accent : T["ink-soft"];
+  cx.textBaseline = "bottom";
+  cx.fillText(txtLon, lx, -4);
+  cx.restore();
+  cx.restore();
+}
+function tapar(x, y, an, al){
+  cx.save(); cx.fillStyle = T.ground; cx.fillRect(x, y, an, al); cx.restore();
+}
+
+/* ---------- enganche ---------- */
+function buscarEnganche(x, y){
+  var mejor = null, mejorD = 44;
+  OBRAS.forEach(function(o){
+    if(o._x == null) return;
+    var d = Math.hypot(o._x - x, o._y - y);
+    if(d < mejorD){ mejorD = d; mejor = o; }
+  });
+  return mejor;
+}
+
+/* ---------- estado de la barra inferior ---------- */
+function refrescarEstado(){
+  var activa = enganchada || seleccionada;
+  var lat, lon;
+  if(activa){ lat = activa.lat; lon = activa.lon; }
+  else if(cursor.dentro){ var c = aCoords(cursor.x, cursor.y); lat = c.lat; lon = c.lon; }
+  document.getElementById("lecturaLat").textContent = lat == null ? "—" : gms(lat, true);
+  document.getElementById("lecturaLon").textContent = lon == null ? "—" : gms(lon, false);
+  document.getElementById("lecturaEscala").textContent = etiquetaEscala();
+}
+
+/* ---------- interacción ---------- */
+var arrastrando = false, arrX = 0, arrY = 0, movio = false;
+
+cv.addEventListener("pointermove", function(e){
+  cursor.x = e.clientX; cursor.y = e.clientY; cursor.dentro = true;
+  if(arrastrando){
+    var dx = e.clientX - arrX, dy = e.clientY - arrY;
+    if(Math.abs(dx) + Math.abs(dy) > 3) movio = true;
+    vista.lon -= dx / (vista.esc * kx());
+    vista.lat += dy / vista.esc;
+    arrX = e.clientX; arrY = e.clientY;
+  }else if(e.pointerType !== "touch"){
+    enganchada = buscarEnganche(cursor.x, cursor.y);
+  }
+  dibujar(); refrescarEstado();
+});
+cv.addEventListener("pointerleave", function(){
+  cursor.dentro = false; enganchada = null; dibujar(); refrescarEstado();
+});
+cv.addEventListener("pointerdown", function(e){
+  arrastrando = true; movio = false; arrX = e.clientX; arrY = e.clientY;
+  cv.setPointerCapture(e.pointerId);
+});
+cv.addEventListener("pointerup", function(e){
+  arrastrando = false;
+  if(!movio){
+    var o = buscarEnganche(e.clientX, e.clientY);
+    if(o){ elegir(o); }
+    else { seleccionada = null; dibujar(); refrescarEstado(); }
+  }
+});
+cv.addEventListener("wheel", function(e){
+  e.preventDefault();
+  var antes = aCoords(e.clientX, e.clientY);
+  var f = Math.exp(-e.deltaY * 0.0016);
+  vista.esc = Math.max(6, Math.min(260000, vista.esc * f));
+  var despues = aCoords(e.clientX, e.clientY);
+  vista.lon += antes.lon - despues.lon;
+  vista.lat += antes.lat - despues.lat;
+  dibujar(); refrescarEstado();
+}, {passive:false});
+
+function elegir(o){
+  seleccionada = o;
+  enganchada = null;
+  document.querySelectorAll("#listaObras button").forEach(function(b){
+    b.setAttribute("aria-current", b.dataset.nom === o.nom ? "true" : "false");
+  });
+  dibujar(); refrescarEstado();
+}
+function centrarEn(o){
+  vista.lon = o.lon; vista.lat = o.lat;
+  if(vista.esc < 300) vista.esc = 900;
+  elegir(o);
+}
+
+function encuadrar(){
+  var lats = OBRAS.map(function(o){ return o.lat; }).concat([ESTUDIO.lat]);
+  var lons = OBRAS.map(function(o){ return o.lon; }).concat([ESTUDIO.lon]);
+  var laMin = Math.min.apply(null, lats), laMax = Math.max.apply(null, lats);
+  var loMin = Math.min.apply(null, lons), loMax = Math.max.apply(null, lons);
+  vista.lat = (laMin + laMax)/2;
+  vista.lon = (loMin + loMax)/2;
+  /* el margen no puede comerse la ventana entera en pantallas chicas */
+  var margen = Math.min(esTouch ? 90 : 150, Math.min(W, H) * 0.18);
+  var eLat = Math.max(60, H - margen*2) / Math.max(0.4, laMax - laMin);
+  var eLon = Math.max(60, W - margen*2) / Math.max(0.4, (loMax - loMin) * kx());
+  vista.esc = Math.max(6, Math.min(eLat, eLon));
+  seleccionada = null; enganchada = null;
+  dibujar(); refrescarEstado();
+}
+
+/* ---------- listado accesible ---------- */
+(function armarLista(){
+  var ul = document.getElementById("listaObras");
+  document.getElementById("cantidadObras").textContent = OBRAS.length;
+  OBRAS.slice().sort(function(a,b){ return b.anio - a.anio; }).forEach(function(o){
+    var li = document.createElement("li");
+    var b = document.createElement("button");
+    b.type = "button";
+    b.dataset.nom = o.nom;
+    b.setAttribute("aria-current", "false");
+    b.appendChild(document.createTextNode(o.nom));
+    var m = document.createElement("span");
+    m.className = "meta";
+    m.textContent = o.anio + " · " + o.estado + " · " + gms(o.lat, true) + " " + gms(o.lon, false);
+    b.appendChild(m);
+    b.addEventListener("click", function(){ centrarEn(o); });
+    b.addEventListener("focus", function(){ centrarEn(o); });
+    li.appendChild(b);
+    ul.appendChild(li);
+  });
+})();
+
+/* ---------- controles ---------- */
+function zoom(f){
+  vista.esc = Math.max(6, Math.min(260000, vista.esc * f));
+  dibujar(); refrescarEstado();
+}
+document.getElementById("btnZoomIn").addEventListener("click", function(){ zoom(1.6); });
+document.getElementById("btnZoomOut").addEventListener("click", function(){ zoom(1/1.6); });
+document.getElementById("btnEncuadrar").addEventListener("click", encuadrar);
+
+var btnTema = document.getElementById("btnTema");
+btnTema.addEventListener("click", function(){
+  var claro = document.documentElement.getAttribute("data-tema") === "claro";
+  document.documentElement.setAttribute("data-tema", claro ? "oscuro" : "claro");
+  btnTema.textContent = claro ? "CLARO" : "OSCURO";
+  leerTokens(); dibujar();
+});
+
+var panel = document.getElementById("panel");
+document.getElementById("btnPanel").addEventListener("click", function(){
+  panel.classList.toggle("abierto");
+  this.setAttribute("aria-pressed", panel.classList.contains("abierto") ? "true" : "false");
+});
+document.getElementById("btnPanelCerrar").addEventListener("click", function(){
+  panel.classList.remove("abierto");
+  document.getElementById("btnPanel").setAttribute("aria-pressed", "false");
+});
+
+/* ---------- arranque ---------- */
+function medir(){
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  cv.width = Math.round(W * DPR);
+  cv.height = Math.round(H * DPR);
+  cv.style.width = W + "px";
+  cv.style.height = H + "px";
+}
+window.addEventListener("resize", function(){ medir(); dibujar(); });
+
+leerTokens();
+medir();
+encuadrar();
+
+if(esTouch){
+  document.getElementById("pista").textContent = "tocá una obra";
+}
+if(document.fonts && document.fonts.ready){
+  document.fonts.ready.then(function(){ dibujar(); });
+}
+})();
+</script>
+</body>
+</html>
