@@ -200,7 +200,7 @@ tbody tr:hover{background:var(--panel)}
   </section>
 
   <section id="v-mapa" role="tabpanel" aria-labelledby="tab-mapa" hidden>
-    <div class="mapa-caja"><iframe id="marcoMapa" title="Las obras sobre el territorio" loading="lazy"></iframe></div>
+    <div class="mapa-caja"><iframe id="marcoMapa" title="Las obras sobre el territorio"></iframe></div>
   </section>
 </main>
 
@@ -354,8 +354,19 @@ var btnTema = document.getElementById("btnTema");
 function aplicarTema(t){
   document.documentElement.setAttribute("data-tema", t);
   btnTema.textContent = t === "oscuro" ? "CLARO" : "OSCURO";
-  var m = document.getElementById("marcoMapa");
-  if(mapaCargado) m.src = "../mapa/?embed=1&tema=" + t;
+  if(!mapaCargado) return;
+  /* el mapa es de mismo origen: se le cambia el tema sin recargarlo,
+     así no se pierde el encuadre que el visitante venía mirando */
+  var f = document.getElementById("marcoMapa");
+  try{
+    var d = f.contentDocument;
+    if(d && d.documentElement && f.contentWindow.refrescarTema){
+      d.documentElement.setAttribute("data-tema", t);
+      f.contentWindow.refrescarTema();
+      return;
+    }
+  }catch(e){}
+  f.src = "../mapa/?embed=1&tema=" + t;
 }
 btnTema.addEventListener("click", function(){
   aplicarTema(document.documentElement.getAttribute("data-tema") === "oscuro" ? "claro" : "oscuro");

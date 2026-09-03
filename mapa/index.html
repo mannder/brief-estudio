@@ -769,6 +769,9 @@ document.getElementById("btnZoomIn").addEventListener("click", function(){ zoom(
 document.getElementById("btnZoomOut").addEventListener("click", function(){ zoom(1/1.6); });
 document.getElementById("btnEncuadrar").addEventListener("click", encuadrar);
 
+/* lo usa la página que lo embebe para cambiar el tema sin recargar */
+window.refrescarTema = function(){ leerTokens(); dibujar(); };
+
 var btnTema = document.getElementById("btnTema");
 btnTema.addEventListener("click", function(){
   var claro = document.documentElement.getAttribute("data-tema") === "claro";
