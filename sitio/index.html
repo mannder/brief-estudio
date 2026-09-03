@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Prototipo de portada: grilla de obras, índice y mapa.">
+<title>Portada en grilla</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root{
+  --ground:#FFFFFF;
+  --panel:#F4F5F6;
+  --ink:#111417;
+  --ink-soft:#5B646C;
+  --ink-faint:#96A0A8;
+  --line:#DCE1E5;
+  --line-soft:#EDEFF1;
+  --accent:#1E5A8A;
+  --accent-on:#FFFFFF;
+  --marca:#A9433A;
+}
+:root[data-tema="oscuro"]{
+  --ground:#0E1114;
+  --panel:#171B20;
+  --ink:#E4E8EB;
+  --ink-soft:#98A2AB;
+  --ink-faint:#69737C;
+  --line:#272E35;
+  --line-soft:#1E242A;
+  --accent:#7FB0E6;
+  --accent-on:#0E1114;
+  --marca:#DC8F85;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"Archivo","Helvetica Neue",Arial,sans-serif;
+  font-size:14px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+a{color:inherit; text-decoration:none}
+
+/* ---------- encabezado ---------- */
+.cab{
+  position:sticky; top:0; z-index:10; background:var(--ground);
+  border-bottom:1px solid var(--line);
+  padding:22px 60px 0;
+}
+.cab-fila{display:flex; align-items:baseline; justify-content:space-between; gap:24px; flex-wrap:wrap}
+.nombre{
+  margin:0; font-family:"IBM Plex Mono",monospace;
+  font-size:15px; font-weight:500; letter-spacing:.18em;
+}
+.secciones{display:flex; gap:22px; font-size:13.5px; color:var(--ink-soft)}
+.secciones a:hover{color:var(--accent)}
+
+.vistas{display:flex; gap:0; margin:18px 0 -1px; align-items:flex-end}
+.vista-btn{
+  font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.13em;
+  background:none; border:0; border-bottom:2px solid transparent;
+  color:var(--ink-faint); padding:8px 0; margin-right:26px; cursor:pointer;
+}
+.vista-btn:hover{color:var(--ink)}
+.vista-btn[aria-selected="true"]{color:var(--ink); border-bottom-color:var(--ink)}
+.tema-btn{
+  margin-left:auto; font-family:"IBM Plex Mono",monospace; font-size:11px;
+  letter-spacing:.1em; background:none; border:1px solid var(--line);
+  color:var(--ink-soft); padding:5px 10px; cursor:pointer; align-self:center;
+}
+.tema-btn:hover{border-color:var(--ink-faint); color:var(--ink)}
+button:focus-visible, a:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+/* ---------- filtros ---------- */
+.filtros{display:flex; gap:8px; flex-wrap:wrap; padding:20px 60px 0}
+.filtro{
+  font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.1em;
+  background:none; border:1px solid var(--line); color:var(--ink-soft);
+  padding:5px 10px; cursor:pointer;
+}
+.filtro:hover{border-color:var(--ink-faint); color:var(--ink)}
+.filtro[aria-pressed="true"]{background:var(--ink); border-color:var(--ink); color:var(--ground)}
+
+/* ---------- grilla ---------- */
+.grilla{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:40px 22px;
+  padding:26px 60px 80px;
+}
+.obra{display:block}
+.tapa{
+  position:relative; aspect-ratio:4/3; background:var(--panel);
+  border:1px solid var(--line); display:flex; align-items:center; justify-content:center;
+  overflow:hidden;
+}
+.obra:hover .tapa{border-color:var(--accent)}
+.tapa svg{width:44%; height:44%; overflow:visible}
+.tapa .marca-falta{
+  position:absolute; left:7px; bottom:6px;
+  font-family:"IBM Plex Mono",monospace; font-size:8.5px; letter-spacing:.12em;
+  color:var(--ink-faint);
+}
+.pie{margin-top:11px; line-height:1.35}
+.pie-nom{font-weight:500}
+.pie-lug{color:var(--ink-soft)}
+.pie-dato{
+  display:block; margin-top:4px; font-family:"IBM Plex Mono",monospace;
+  font-size:10.5px; letter-spacing:.06em; color:var(--ink-faint);
+}
+.obra:hover .pie-dato{color:var(--accent)}
+
+/* ---------- índice ---------- */
+.indice{padding:26px 60px 80px; overflow-x:auto}
+table{border-collapse:collapse; width:100%; min-width:640px}
+th{
+  text-align:left; font-family:"IBM Plex Mono",monospace; font-weight:500;
+  font-size:10.5px; letter-spacing:.12em; color:var(--ink-faint);
+  border-bottom:1px solid var(--line); padding:0 14px 9px 0; cursor:pointer;
+  white-space:nowrap;
+}
+th:hover{color:var(--ink)}
+th[aria-sort]{color:var(--ink)}
+td{border-bottom:1px solid var(--line-soft); padding:13px 14px 13px 0; vertical-align:baseline}
+tbody tr:hover{background:var(--panel)}
+.td-nom{font-weight:500}
+.td-dato{font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--ink-soft); white-space:nowrap}
+.estado{
+  font-family:"IBM Plex Mono",monospace; font-size:9.5px; letter-spacing:.1em;
+  border:1px solid var(--line); padding:2px 6px; color:var(--ink-soft); white-space:nowrap;
+}
+
+/* ---------- mapa ---------- */
+.mapa-caja{padding:0; height:calc(100vh - 190px); min-height:420px}
+.mapa-caja iframe{width:100%; height:100%; border:0; border-top:1px solid var(--line)}
+
+/* ---------- pie de página ---------- */
+.pie-nota{
+  border-top:1px solid var(--line); padding:18px 60px 40px;
+  font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--ink-faint);
+  display:flex; gap:20px; flex-wrap:wrap;
+}
+.pie-nota b{color:var(--marca); font-weight:400}
+
+[hidden]{display:none !important}
+
+@media (max-width:1100px){ .grilla{grid-template-columns:repeat(3,1fr)} }
+@media (max-width:820px){
+  .cab{padding:18px 24px 0}
+  .filtros, .grilla, .indice, .pie-nota{padding-left:24px; padding-right:24px}
+  .grilla{grid-template-columns:repeat(2,1fr); gap:30px 16px}
+  .secciones{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="cab">
+  <div class="cab-fila">
+    <h1 class="nombre">34 | 56 | ARQUITECTURA</h1>
+    <nav class="secciones">
+      <a href="#">Estudio</a><a href="#">Servicios</a>
+      <a href="#">Premios y publicaciones</a><a href="#">Contacto</a>
+    </nav>
+  </div>
+  <div class="vistas" role="tablist" aria-label="Modo de ver las obras">
+    <button class="vista-btn" role="tab" id="tab-grilla" aria-selected="true" aria-controls="v-grilla">GRILLA</button>
+    <button class="vista-btn" role="tab" id="tab-indice" aria-selected="false" aria-controls="v-indice">ÍNDICE</button>
+    <button class="vista-btn" role="tab" id="tab-mapa" aria-selected="false" aria-controls="v-mapa">MAPA</button>
+    <button class="tema-btn" id="btnTema" type="button">OSCURO</button>
+  </div>
+</header>
+
+<div class="filtros" id="filtros"></div>
+
+<main>
+  <section id="v-grilla" role="tabpanel" aria-labelledby="tab-grilla">
+    <div class="grilla" id="grilla"></div>
+  </section>
+
+  <section id="v-indice" role="tabpanel" aria-labelledby="tab-indice" hidden>
+    <div class="indice">
+      <table>
+        <thead>
+          <tr>
+            <th data-campo="nom">OBRA</th>
+            <th data-campo="lugar">UBICACIÓN</th>
+            <th data-campo="anio">AÑO</th>
+            <th data-campo="tipo">TIPO</th>
+            <th data-campo="estado">ESTADO</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpoIndice"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="v-mapa" role="tabpanel" aria-labelledby="tab-mapa" hidden>
+    <div class="mapa-caja"><iframe id="marcoMapa" title="Las obras sobre el territorio" loading="lazy"></iframe></div>
+  </section>
+</main>
+
+<div class="pie-nota">
+  <span><b>Prototipo.</b> Las tapas son marcas de posición: van las fotos reales.</span>
+  <span id="conteo"></span>
+  <span>La grilla se lee bien a partir de unas doce obras.</span>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var OBRAS = [
+  {nom:"PEMEW · Ministerio de Educación", lugar:"Buenos Aires", anio:2019, tipo:"Institucional",
+   estado:"Construida", lat:-34.6118, lon:-58.3702, glifo:0},
+  {nom:"Casa Cruz", lugar:"Canning", anio:2021, tipo:"Vivienda",
+   estado:"Construida", lat:-34.8712, lon:-58.5104, glifo:1},
+  {nom:"Casa La Atómica", lugar:"Buenos Aires", anio:2017, tipo:"Vivienda",
+   estado:"Construida", lat:-34.7205, lon:-58.2531, glifo:2},
+  {nom:"Cooperativa Sensibles en Crecimiento", lugar:"Buenos Aires", anio:2022, tipo:"Vivienda colectiva",
+   estado:"Proyecto", lat:-34.6294, lon:-58.4402, glifo:3},
+  {nom:"Complejo Municipal Cipolletti", lugar:"Cipolletti, Río Negro", anio:2016, tipo:"Institucional",
+   estado:"Concurso", lat:-38.9339, lon:-68.0004, glifo:4}
+];
+
+/* Los mismos dibujos del mapa. Marcas de posición hasta que estén las fotos. */
+var GLIFOS = [
+  '<path d="M4 4h56v42H4z"/><path d="M20 16h24v18H20z"/>',
+  '<path d="M4 17h56v16H4z"/><path d="M24 3h16v44H24z"/>',
+  '<path d="M4 4h22v26h34v16H4z"/>',
+  '<path d="M4 12h56v26H4z"/><path d="M18 12v26M32 12v26M46 12v26"/>',
+  '<path d="M6 5h52v40H6z"/><path d="M6 45 58 5"/>'
+];
+function svg(i){
+  return '<svg viewBox="0 0 64 50" fill="none" stroke="currentColor" stroke-width="1.25" ' +
+         'vector-effect="non-scaling-stroke" aria-hidden="true">' + GLIFOS[i] + '</svg>';
+}
+
+function gms(v, esLat){
+  var hemi = esLat ? (v < 0 ? "S" : "N") : (v < 0 ? "O" : "E");
+  var a = Math.abs(v), g = Math.floor(a);
+  var mf = (a - g) * 60, m = Math.floor(mf);
+  var s = Math.round((mf - m) * 60);
+  if(s === 60){ s = 0; m += 1; }
+  if(m === 60){ m = 0; g += 1; }
+  var dd = function(n){ return (n < 10 ? "0" : "") + n; };
+  return g + "°" + dd(m) + "'" + dd(s) + '" ' + hemi;
+}
+
+var filtro = "TODAS";
+var TIPOS = ["TODAS"].concat(OBRAS.map(function(o){ return o.tipo; })
+  .filter(function(v,i,a){ return a.indexOf(v) === i; }));
+
+function visibles(){
+  return filtro === "TODAS" ? OBRAS : OBRAS.filter(function(o){ return o.tipo === filtro; });
+}
+
+function pintarFiltros(){
+  var c = document.getElementById("filtros");
+  c.innerHTML = "";
+  TIPOS.forEach(function(t){
+    var b = document.createElement("button");
+    b.className = "filtro";
+    b.type = "button";
+    b.textContent = t.toUpperCase();
+    b.setAttribute("aria-pressed", t === filtro ? "true" : "false");
+    b.addEventListener("click", function(){ filtro = t; pintarFiltros(); pintarGrilla(); pintarIndice(); });
+    c.appendChild(b);
+  });
+}
+
+function pintarGrilla(){
+  var g = document.getElementById("grilla");
+  g.innerHTML = "";
+  visibles().forEach(function(o){
+    var a = document.createElement("a");
+    a.className = "obra";
+    a.href = "#";
+    a.innerHTML =
+      '<div class="tapa">' + svg(o.glifo) +
+        '<span class="marca-falta">SIN FOTO</span>' +
+      '</div>' +
+      '<div class="pie">' +
+        '<span class="pie-nom"></span><span class="pie-lug"></span>' +
+        '<span class="pie-dato"></span>' +
+      '</div>';
+    a.querySelector(".pie-nom").textContent = o.nom;
+    a.querySelector(".pie-lug").textContent = ", " + o.lugar;
+    a.querySelector(".pie-dato").textContent = o.anio + "  ·  " + gms(o.lat, true) + "  " + gms(o.lon, false);
+    g.appendChild(a);
+  });
+  document.getElementById("conteo").textContent = visibles().length + " de " + OBRAS.length + " obras";
+}
+
+var orden = {campo:"anio", dir:-1};
+function pintarIndice(){
+  var t = document.getElementById("cuerpoIndice");
+  t.innerHTML = "";
+  var lista = visibles().slice().sort(function(a,b){
+    var x = a[orden.campo], y = b[orden.campo];
+    if(typeof x === "string") return x.localeCompare(y, "es") * orden.dir;
+    return (x - y) * orden.dir;
+  });
+  lista.forEach(function(o){
+    var tr = document.createElement("tr");
+    tr.innerHTML = '<td class="td-nom"></td><td class="td-dato"></td><td class="td-dato"></td>' +
+                   '<td class="td-dato"></td><td><span class="estado"></span></td>';
+    var c = tr.children;
+    c[0].textContent = o.nom;
+    c[1].textContent = o.lugar + "  ·  " + gms(o.lat, true) + " " + gms(o.lon, false);
+    c[2].textContent = o.anio;
+    c[3].textContent = o.tipo;
+    c[4].firstChild.textContent = o.estado.toUpperCase();
+    t.appendChild(tr);
+  });
+  document.querySelectorAll("th").forEach(function(th){
+    if(th.dataset.campo === orden.campo) th.setAttribute("aria-sort", orden.dir === 1 ? "ascending" : "descending");
+    else th.removeAttribute("aria-sort");
+  });
+}
+document.querySelectorAll("th").forEach(function(th){
+  th.addEventListener("click", function(){
+    var c = th.dataset.campo;
+    if(orden.campo === c) orden.dir *= -1; else { orden.campo = c; orden.dir = 1; }
+    pintarIndice();
+  });
+});
+
+/* ---------- vistas ---------- */
+var PANELES = {grilla:"v-grilla", indice:"v-indice", mapa:"v-mapa"};
+var mapaCargado = false;
+function verVista(cual){
+  Object.keys(PANELES).forEach(function(k){
+    document.getElementById(PANELES[k]).hidden = (k !== cual);
+    document.getElementById("tab-" + k).setAttribute("aria-selected", k === cual ? "true" : "false");
+  });
+  document.getElementById("filtros").hidden = (cual === "mapa");
+  if(cual === "mapa" && !mapaCargado){
+    /* se carga recién cuando hace falta: el mapa pesa */
+    document.getElementById("marcoMapa").src = "../mapa/?embed=1";
+    mapaCargado = true;
+  }
+}
+Object.keys(PANELES).forEach(function(k){
+  document.getElementById("tab-" + k).addEventListener("click", function(){ verVista(k); });
+});
+
+/* ---------- tema ---------- */
+var btnTema = document.getElementById("btnTema");
+function aplicarTema(t){
+  document.documentElement.setAttribute("data-tema", t);
+  btnTema.textContent = t === "oscuro" ? "CLARO" : "OSCURO";
+  var m = document.getElementById("marcoMapa");
+  if(mapaCargado) m.src = "../mapa/?embed=1&tema=" + t;
+}
+btnTema.addEventListener("click", function(){
+  aplicarTema(document.documentElement.getAttribute("data-tema") === "oscuro" ? "claro" : "oscuro");
+});
+aplicarTema("claro");
+
+pintarFiltros();
+pintarGrilla();
+pintarIndice();
+})();
+</script>
+</body>
+</html>

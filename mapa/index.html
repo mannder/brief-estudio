@@ -806,6 +806,21 @@ window.addEventListener("resize", function(){
   if(tocado) dibujar(); else encuadrar();
 });
 
+/* Embebido dentro de otra página: sin rótulo propio y con el tema que
+   mande el contenedor. */
+(function(){
+  var q = new URLSearchParams(location.search);
+  if(q.has("embed")){
+    document.querySelector(".rotulo").style.display = "none";
+    document.querySelector(".controles").style.top = "23px";
+  }
+  var t = q.get("tema");
+  if(t === "claro" || t === "oscuro"){
+    document.documentElement.setAttribute("data-tema", t);
+    document.getElementById("btnTema").textContent = t === "claro" ? "OSCURO" : "CLARO";
+  }
+})();
+
 leerTokens();
 medir();
 encuadrar();
