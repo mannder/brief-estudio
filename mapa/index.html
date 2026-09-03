@@ -816,6 +816,8 @@ window.addEventListener("resize", function(){
   if(q.has("embed")){
     document.querySelector(".rotulo").style.display = "none";
     document.querySelector(".controles").style.top = "23px";
+    /* el tema lo maneja la página que lo contiene: sobra el botón propio */
+    document.getElementById("btnTema").style.display = "none";
   }
   var t = q.get("tema");
   if(t === "claro" || t === "oscuro"){
